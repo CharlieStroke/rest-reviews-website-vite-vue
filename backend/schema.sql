@@ -1,15 +1,45 @@
 -- =========================================
+-- INITIAL CLEANUP (Idempotency)
+-- =========================================
+DROP TRIGGER IF EXISTS update_users_updated_at ON users;
+DROP TRIGGER IF EXISTS update_establishments_updated_at ON establishments;
+DROP TRIGGER IF EXISTS update_reviews_updated_at ON reviews;
+
+DROP TABLE IF EXISTS training_runs;
+DROP TABLE IF EXISTS metrics_snapshots;
+DROP TABLE IF EXISTS sentiment_results;
+DROP TABLE IF EXISTS model_versions;
+DROP TABLE IF EXISTS reviews;
+DROP TABLE IF EXISTS establishments;
+DROP TABLE IF EXISTS user_sessions;
+DROP TABLE IF EXISTS users;
+
+DROP TYPE IF EXISTS user_role;
+DROP TYPE IF EXISTS sentiment_label;
+DROP TYPE IF EXISTS training_status;
+
+-- =========================================
 -- EXTENSIONS
 -- =========================================
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- =========================================
+-- UTILITY FUNCTIONS
+-- =========================================
+-- Function to automatically update the updated_at column
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = now();
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+-- =========================================
 -- ENUMS
 -- =========================================
 CREATE TYPE user_role AS ENUM ('student','manager','admin');
-
-CREATE TYPE sentiment_label AS ENUM ('positive','negative');
-
+CREATE TYPE sentiment_label AS ENUM ('positive', 'negative', 'neutral');
 CREATE TYPE training_status AS ENUM ('running','success','failed');
 
 -- =========================================
@@ -28,6 +58,10 @@ CREATE TABLE users (
 
 CREATE INDEX idx_users_role ON users(role);
 
+CREATE TRIGGER update_users_updated_at
+  BEFORE UPDATE ON users
+  FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
+
 -- =========================================
 -- USER SESSIONS
 -- =========================================
@@ -35,11 +69,13 @@ CREATE TABLE user_sessions (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   refresh_token text NOT NULL,
+  is_revoked boolean NOT NULL DEFAULT false,
   expires_at timestamptz NOT NULL,
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
 CREATE INDEX idx_user_sessions_user_id ON user_sessions(user_id);
+CREATE INDEX idx_user_sessions_revoked ON user_sessions(is_revoked) WHERE is_revoked = false;
 
 -- =========================================
 -- ESTABLISHMENTS
@@ -48,7 +84,7 @@ CREATE TABLE establishments (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name varchar(150) NOT NULL,
   description text,
-  category varchar(80),
+  category varchar(80), -- Mantengo varchar para simplicidad inicial, pero se puede normalizar luego
   manager_id uuid REFERENCES users(id) ON DELETE SET NULL,
   is_active boolean NOT NULL DEFAULT true,
   created_at timestamptz NOT NULL DEFAULT now(),
@@ -57,6 +93,10 @@ CREATE TABLE establishments (
 
 CREATE INDEX idx_establishments_manager ON establishments(manager_id);
 CREATE INDEX idx_establishments_active ON establishments(is_active);
+
+CREATE TRIGGER update_establishments_updated_at
+  BEFORE UPDATE ON establishments
+  FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
 
 -- =========================================
 -- REVIEWS
@@ -70,8 +110,8 @@ CREATE TABLE reviews (
   price_score smallint NOT NULL CHECK (price_score BETWEEN 1 AND 5),
   comment text NOT NULL,
   created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now(),
-  CONSTRAINT unique_user_establishment UNIQUE(user_id, establishment_id)
+  updated_at timestamptz NOT NULL DEFAULT now()
+  -- Se eliminó unique_user_establishment para permitir múltiples reseñas
 );
 
 CREATE INDEX idx_reviews_establishment ON reviews(establishment_id);
@@ -79,6 +119,10 @@ CREATE INDEX idx_reviews_user ON reviews(user_id);
 CREATE INDEX idx_reviews_created_at ON reviews(created_at);
 CREATE INDEX idx_reviews_establishment_created 
   ON reviews(establishment_id, created_at DESC);
+
+CREATE TRIGGER update_reviews_updated_at
+  BEFORE UPDATE ON reviews
+  FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
 
 -- =========================================
 -- MODEL VERSIONS
