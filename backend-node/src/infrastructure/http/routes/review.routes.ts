@@ -9,6 +9,31 @@ const reviewRouter = Router();
 const reviewController = container.resolve(ReviewController);
 
 // Routes
+/**
+ * @swagger
+ * /reviews:
+ *   post:
+ *     summary: Create a new review
+ *     tags:
+ *       - Reviews
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateReviewInput'
+ *     responses:
+ *       201:
+ *         description: Review created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ReviewResponse'
+ *       400:
+ *         description: Invalid input
+ */
 reviewRouter.post('/', authenticateToken, reviewController.create);
 
 export default reviewRouter;

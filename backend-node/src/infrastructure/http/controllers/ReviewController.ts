@@ -7,6 +7,7 @@ import { CreateReviewSchema } from '../../../application/dtos/ReviewDTO';
 export class ReviewController {
     constructor(@inject(CreateReviewUseCase) private createReviewUseCase: CreateReviewUseCase) { }
 
+
     public create = async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
         // We assume the user ID comes from the JWT Auth token (req.user), 
         // but the schema asks for it. We'll merge it with body.

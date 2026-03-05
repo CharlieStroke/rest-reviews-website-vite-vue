@@ -23,6 +23,73 @@ const options: swaggerJsdoc.Options = {
                     bearerFormat: 'JWT',
                 },
             },
+            schemas: {
+                RegisterUserInput: {
+                    type: 'object',
+                    required: ['name', 'email', 'password', 'role'],
+                    properties: {
+                        name: { type: 'string' },
+                        email: { type: 'string', format: 'email' },
+                        password: { type: 'string', minLength: 6 },
+                        role: { type: 'string', enum: ['student', 'manager', 'admin'] }
+                    }
+                },
+                LoginUserInput: {
+                    type: 'object',
+                    required: ['email', 'password'],
+                    properties: {
+                        email: { type: 'string' },
+                        password: { type: 'string' }
+                    }
+                },
+                AuthResponse: {
+                    type: 'object',
+                    properties: {
+                        success: { type: 'boolean' },
+                        message: { type: 'string' },
+                        data: {
+                            type: 'object',
+                            properties: {
+                                id: { type: 'string' },
+                                name: { type: 'string' },
+                                email: { type: 'string' },
+                                role: { type: 'string' },
+                                token: { type: 'string' }
+                            }
+                        }
+                    }
+                },
+                CreateReviewInput: {
+                    type: 'object',
+                    required: ['userId', 'establishmentId', 'foodScore', 'serviceScore', 'priceScore', 'comment'],
+                    properties: {
+                        userId: { type: 'string' },
+                        establishmentId: { type: 'string' },
+                        foodScore: { type: 'integer' },
+                        serviceScore: { type: 'integer' },
+                        priceScore: { type: 'integer' },
+                        comment: { type: 'string' }
+                    }
+                },
+                ReviewResponse: {
+                    type: 'object',
+                    properties: {
+                        success: { type: 'boolean' },
+                        message: { type: 'string' },
+                        data: {
+                            type: 'object',
+                            properties: {
+                                id: { type: 'string' },
+                                establishmentId: { type: 'string' },
+                                foodScore: { type: 'integer' },
+                                serviceScore: { type: 'integer' },
+                                priceScore: { type: 'integer' },
+                                createdAt: { type: 'string', format: 'date-time' }
+                            }
+                        }
+                    }
+                }
+            }
         },
         security: [
             {
