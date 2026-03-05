@@ -1,9 +1,10 @@
-
+import { injectable, inject } from 'tsyringe';
 import { IUserRepository } from '../../../domain/repositories/IUserRepository';
 import { LoginUserDTO } from '../../dtos/AuthDTO';
 import { AppError } from '../../../infrastructure/http/errors/AppError';
 import * as argon2 from 'argon2';
 import * as jwt from 'jsonwebtoken';
+import { env } from '../../../infrastructure/config/env.config';
 
 interface LoginResponse {
     user: {
@@ -15,8 +16,9 @@ interface LoginResponse {
     token: string;
 }
 
+@injectable()
 export class LoginUserUseCase {
-    constructor(private userRepository: IUserRepository) { }
+    constructor(@inject('IUserRepository') private userRepository: IUserRepository) { }
 
     async execute(dto: LoginUserDTO): Promise<LoginResponse> {
         const user = await this.userRepository.findByEmail(dto.email);
@@ -31,12 +33,11 @@ export class LoginUserUseCase {
             throw new AppError('Invalid credentials', 401);
         }
 
-        const secret = process.env.JWT_SECRET || 'fallback-secret';
         // Access token valid for 24h as per general standard, though the PRD mentions refresh tokens later.
         const token = jwt.sign(
             { userId: user.id, role: user.role, email: user.email },
-            secret,
-            { expiresIn: '24h' }
+            env.JWT_SECRET,
+            { expiresIn: env.JWT_EXPIRES_IN as any }
         );
 
         return {
