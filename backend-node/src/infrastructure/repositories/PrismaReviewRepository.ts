@@ -54,7 +54,6 @@ export class PrismaReviewRepository implements IReviewRepository {
     }
 
     async hasUserReviewedEstablishment(userId: string, establishmentId: string): Promise<boolean> {
-        // Relying on the DB unique constraint [userId, establishmentId] check efficiency via a query
         const count = await prisma.review.count({
             where: {
                 userId,
