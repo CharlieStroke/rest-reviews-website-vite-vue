@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response } from 'express';
 import { injectable, inject } from 'tsyringe';
 import { CreateEstablishmentUseCase } from '../../../application/use-cases/establishments/CreateEstablishmentUseCase';
 import { GetEstablishmentUseCase } from '../../../application/use-cases/establishments/GetEstablishmentUseCase';
@@ -73,7 +73,8 @@ export class EstablishmentController {
      *         description: OK
      */
     public getById = async (req: Request, res: Response): Promise<void> => {
-        const establishment = await this.getUseCase.execute(req.params.id);
+        const id = req.params.id as string;
+        const establishment = await this.getUseCase.execute(id);
         res.status(200).json({ success: true, data: establishment });
     };
 
@@ -102,8 +103,9 @@ export class EstablishmentController {
      *         description: Updated
      */
     public update = async (req: Request, res: Response): Promise<void> => {
+        const id = req.params.id as string;
         const validatedData = UpdateEstablishmentSchema.parse(req.body);
-        const establishment = await this.updateUseCase.execute(req.params.id, validatedData);
+        const establishment = await this.updateUseCase.execute(id, validatedData);
         res.status(200).json({ success: true, data: establishment });
     };
 
@@ -126,7 +128,8 @@ export class EstablishmentController {
      *         description: Deleted
      */
     public delete = async (req: Request, res: Response): Promise<void> => {
-        await this.deleteUseCase.execute(req.params.id);
+        const id = req.params.id as string;
+        await this.deleteUseCase.execute(id);
         res.status(204).send();
     };
 }
