@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import { describe, it, expect, vi } from 'vitest';
 import { CreateReviewUseCase } from './CreateReviewUseCase';
 import { IReviewRepository } from '../../../domain/repositories/IReviewRepository';

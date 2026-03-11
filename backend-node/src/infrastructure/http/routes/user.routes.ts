@@ -1,19 +1,20 @@
 import { Router } from 'express';
 import { container } from '../../config/container';
 import { UserController } from '../controllers/UserController';
-import { authenticateToken } from '../middlewares/AuthMiddleware';
+import { authenticateToken, requireRole } from '../middlewares/AuthMiddleware';
 
 const userRouter = Router();
 const controller = container.resolve(UserController);
 
 // All user management routes are protected
-// In a next step we might add a checkRole('admin') middleware
 userRouter.use(authenticateToken);
 
 userRouter.get('/:id/profile', controller.getProfile);
-userRouter.get('/', controller.getAll);
-userRouter.get('/:id', controller.getById);
-userRouter.put('/:id', controller.update);
-userRouter.delete('/:id', controller.delete);
+
+// Admin-only routes
+userRouter.get('/', requireRole(['admin']), controller.getAll);
+userRouter.get('/:id', requireRole(['admin']), controller.getById);
+userRouter.put('/:id', requireRole(['admin']), controller.update);
+userRouter.delete('/:id', requireRole(['admin']), controller.delete);
 
 export default userRouter;

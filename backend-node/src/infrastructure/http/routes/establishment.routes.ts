@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { container } from '../../config/container';
 import { EstablishmentController } from '../controllers/EstablishmentController';
 import { ReviewController } from '../controllers/ReviewController';
-import { authenticateToken } from '../middlewares/AuthMiddleware';
+import { authenticateToken, requireRole } from '../middlewares/AuthMiddleware';
 
 const establishmentRouter = Router();
 const controller = container.resolve(EstablishmentController);
@@ -14,8 +14,8 @@ establishmentRouter.get('/:id', controller.getById);
 establishmentRouter.get('/:id/reviews', reviewController.getByEstablishment);
 
 // Protected Routes
-establishmentRouter.post('/', authenticateToken, controller.create);
-establishmentRouter.put('/:id', authenticateToken, controller.update);
-establishmentRouter.delete('/:id', authenticateToken, controller.delete);
+establishmentRouter.post('/', authenticateToken, requireRole(['admin']), controller.create);
+establishmentRouter.put('/:id', authenticateToken, requireRole(['admin', 'manager']), controller.update);
+establishmentRouter.delete('/:id', authenticateToken, requireRole(['admin']), controller.delete);
 
 export default establishmentRouter;

@@ -8,7 +8,7 @@ export class ListEstablishmentsUseCase {
         @inject('IEstablishmentRepository') private repository: IEstablishmentRepository
     ) { }
 
-    async execute(): Promise<Establishment[]> {
-        return await this.repository.findAll();
+    async execute(filters?: { name?: string; universityId?: string }): Promise<Establishment[]> {
+        return await this.repository.findAll(filters);
     }
 }

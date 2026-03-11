@@ -45,14 +45,29 @@ export class EstablishmentController {
      * @swagger
      * /establishments:
      *   get:
-     *     summary: List all establishments
+     *     summary: List establishments with optional filters
      *     tags: [Establishments]
+     *     parameters:
+     *       - in: query
+     *         name: name
+     *         schema:
+     *           type: string
+     *         description: Filter by name (partial match)
+     *       - in: query
+     *         name: universityId
+     *         schema:
+     *           type: string
+     *         description: Filter by university ID
      *     responses:
      *       200:
      *         description: OK
      */
-    public getAll = async (_req: Request, res: Response): Promise<void> => {
-        const establishments = await this.listUseCase.execute();
+    public getAll = async (req: Request, res: Response): Promise<void> => {
+        const { name, universityId } = req.query;
+        const establishments = await this.listUseCase.execute({
+            name: name as string,
+            universityId: universityId as string
+        });
         res.status(200).json({ success: true, data: establishments });
     };
 
