@@ -109,6 +109,23 @@ export class PrismaMetricsRepository implements IMetricsRepository {
         };
     }
 
+    async getHistoricalMetrics(id: string, days: number): Promise<any[]> {
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - days);
+
+        return await prisma.metricsSnapshot.findMany({
+            where: {
+                establishmentId: id,
+                snapshotDate: {
+                    gte: startDate
+                }
+            },
+            orderBy: {
+                snapshotDate: 'asc'
+            }
+        });
+    }
+
     private calculateAvg(scores: number[]): number {
         if (scores.length === 0) return 0;
         const sum = scores.reduce((a, b) => a + b, 0);

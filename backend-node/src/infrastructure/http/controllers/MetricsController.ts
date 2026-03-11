@@ -3,16 +3,62 @@ import { injectable, inject } from 'tsyringe';
 import { GetGlobalMetricsUseCase } from '../../../application/use-cases/metrics/GetGlobalMetricsUseCase';
 import { GetEstablishmentMetricsUseCase } from '../../../application/use-cases/metrics/GetEstablishmentMetricsUseCase';
 import { GetManagerEstablishmentsUseCase } from '../../../application/use-cases/metrics/GetManagerEstablishmentsUseCase';
+import { GetHistoricalMetricsUseCase } from '../../../application/use-cases/metrics/GetHistoricalMetricsUseCase';
 import { AuthRequest } from '../middlewares/AuthMiddleware';
 import { AppError } from '../errors/AppError';
+import { TimeSeriesQuerySchema } from '../../../application/dtos/MetricsDTO';
 
 @injectable()
 export class MetricsController {
     constructor(
         @inject(GetGlobalMetricsUseCase) private getGlobalMetricsUseCase: GetGlobalMetricsUseCase,
         @inject(GetEstablishmentMetricsUseCase) private getEstablishmentMetricsUseCase: GetEstablishmentMetricsUseCase,
-        @inject(GetManagerEstablishmentsUseCase) private getManagerEstablishmentsUseCase: GetManagerEstablishmentsUseCase
+        @inject(GetManagerEstablishmentsUseCase) private getManagerEstablishmentsUseCase: GetManagerEstablishmentsUseCase,
+        @inject(GetHistoricalMetricsUseCase) private getHistoricalMetricsUseCase: GetHistoricalMetricsUseCase
     ) { }
+
+    /**
+     * @swagger
+     * /metrics/establishment/{id}/history:
+     *   get:
+     *     summary: Get historical time-series metrics for a specific establishment
+     *     tags: [Analytics]
+     *     security:
+     *       - bearerAuth: []
+     *     parameters:
+     *       - in: path
+     *         name: id
+     *         required: true
+     *         schema:
+     *           type: string
+     *       - in: query
+     *         name: days
+     *         schema:
+     *           type: integer
+     *           default: 30
+     *     responses:
+     *       200:
+     *         description: Historical metrics series
+     */
+    public getHistory = async (req: AuthRequest, res: Response): Promise<void> => {
+        const { id } = req.params;
+        const user = req.user;
+        const { days } = TimeSeriesQuerySchema.parse(req.query);
+
+        if (!user) throw new AppError('Unauthorized', 401);
+
+        // Security Check: Only admin or the establishment's manager can see its metrics
+        if (user.role !== 'admin') {
+            const establishments = await this.getManagerEstablishmentsUseCase.execute(user.userId);
+            const isManager = establishments.some(e => e.id === id);
+            if (!isManager) {
+                throw new AppError('Access denied. You do not manage this establishment.', 403);
+            }
+        }
+
+        const metrics = await this.getHistoricalMetricsUseCase.execute(id as string, days);
+        res.status(200).json({ success: true, data: metrics });
+    };
 
     /**
      * @swagger
