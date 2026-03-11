@@ -1,11 +1,18 @@
 <script setup lang="ts">
-import HelloWorld from '@/components/HelloWorld.vue'
-import viteVue from '@/components/ViteVueImgs.vue'
-import Sum from '@/components/TwoNumberSum.vue'
+import { useAuthStore } from './application/stores/useAuthStore';
+import { onMounted } from 'vue';
+
+const authStore = useAuthStore();
+
+onMounted(() => {
+  authStore.initAuth();
+});
 </script>
 
 <template>
-  <viteVue />
-  <HelloWorld msg="Vite + Vue" />
-  <Sum />
+  <router-view />
 </template>
+
+<style>
+/* Global styles are imported in main.ts */
+</style>

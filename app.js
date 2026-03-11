@@ -7,7 +7,6 @@ createApp({
         const busqueda = ref('');
         let chart = null;
 
-        // Datos del estudiante para el perfil
         const usuario = ref({
             nombre: 'Sebastián Morales',
             id: '00458921',
@@ -28,7 +27,7 @@ createApp({
         ]);
 
         const listaFiltrada = computed(() => {
-            return establecimientos.value.filter(e => 
+            return establecimientos.value.filter(e =>
                 e.nombre.toLowerCase().includes(busqueda.value.toLowerCase())
             );
         });
@@ -41,9 +40,9 @@ createApp({
                 type: 'doughnut',
                 data: {
                     labels: ['Positivas', 'Neutrales', 'Negativas'],
-                    datasets: [{ 
-                        data: [70, 20, 10], 
-                        backgroundColor: ['#10b981', '#facc15', '#ef4444'] 
+                    datasets: [{
+                        data: [70, 20, 10],
+                        backgroundColor: ['#10b981', '#facc15', '#ef4444']
                     }]
                 },
                 options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
@@ -59,9 +58,9 @@ createApp({
             if (v === 'inicio') { await nextTick(); cargarGrafica(); }
         });
 
-        onMounted(() => { 
+        onMounted(() => {
             if (!localStorage.getItem('user_rol')) window.location.href = 'login.html';
-            if (vista.value === 'inicio') cargarGrafica(); 
+            if (vista.value === 'inicio') cargarGrafica();
         });
 
         return { miRol, vista, titulos, busqueda, listaFiltrada, salir, usuario };
