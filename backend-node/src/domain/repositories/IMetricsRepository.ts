@@ -29,4 +29,5 @@ export interface EstablishmentMetricSummary extends EstablishmentMetric {
 export interface IMetricsRepository {
     getGlobalSummary(): Promise<GlobalMetrics>;
     getEstablishmentSummary(id: string): Promise<EstablishmentMetricSummary | null>;
+    getHistoricalMetrics(id: string, days: number): Promise<any[]>;
 }

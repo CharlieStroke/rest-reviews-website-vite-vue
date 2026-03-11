@@ -8,5 +8,6 @@ const controller = container.resolve(MetricsController);
 
 metricsRouter.get('/summary', authenticateToken, requireRole(['admin', 'manager']), controller.getSummary);
 metricsRouter.get('/establishment/:id', authenticateToken, requireRole(['admin', 'manager']), controller.getByEstablishmentId);
+metricsRouter.get('/establishment/:id/history', authenticateToken, requireRole(['admin', 'manager']), controller.getHistory);
 
 export default metricsRouter;
