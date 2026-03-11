@@ -52,6 +52,9 @@ CREATE TABLE users (
   password_hash text NOT NULL,
   role user_role NOT NULL,
   is_active boolean NOT NULL DEFAULT true,
+  avatar_url text,
+  bio text,
+  university_id text,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
@@ -114,6 +117,7 @@ CREATE TABLE reviews (
   service_score smallint NOT NULL CHECK (service_score BETWEEN 1 AND 5),
   price_score smallint NOT NULL CHECK (price_score BETWEEN 1 AND 5),
   comment text NOT NULL,
+  image_url text,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
   -- Se eliminó unique_user_establishment para permitir múltiples reseñas
