@@ -22,6 +22,11 @@ export class UpdateEstablishmentUseCase {
             description: dto.description ?? existing.description,
             category: dto.category ?? existing.category,
             managerId: dto.managerId ?? existing.managerId,
+            universityId: dto.universityId ?? existing.universityId,
+            locationDetails: dto.locationDetails ?? existing.locationDetails,
+            openingHours: dto.openingHours ?? existing.openingHours,
+            galleryUrls: dto.galleryUrls ?? existing.galleryUrls,
+            menuUrls: dto.menuUrls ?? existing.menuUrls,
             isActive: dto.isActive ?? existing.isActive,
             createdAt: existing.createdAt,
         });

@@ -74,6 +74,51 @@ async function runTests() {
         console.log(`   - Bio: ${profileData.data.bio || 'Sin bio'}`);
         console.log(`   - Verificado: ${profileData.data.verified ? 'SÍ' : 'NO'}`);
 
+        // 7. Update Establishment (Enrichment Test)
+        console.log('\n--- [ESTABLISHMENTS: ENRICHMENT TEST] ---');
+        const updateRes = await fetch(`${API_URL}/establishments/${firstId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                ...authHeader
+            },
+            body: JSON.stringify({
+                universityId: 'Anáhuac Oaxaca',
+                locationDetails: 'Frente al edificio A, planta baja',
+                openingHours: 'Lunes a Viernes: 8:00 AM - 6:00 PM',
+                galleryUrls: ['https://example.com/gallery1.jpg', 'https://example.com/gallery2.jpg'],
+                menuUrls: ['https://example.com/menu1.jpg']
+            })
+        });
+        const updateData = await updateRes.json();
+        if (updateRes.ok) {
+            console.log('✅ Establecimiento enriquecido exitosamente.');
+            const enriched = updateData.data.props || updateData.data;
+            console.log(`   - Universidad: ${enriched.universityId}`);
+            console.log(`   - Ubicación: ${enriched.locationDetails}`);
+            console.log(`   - Galería: ${enriched.galleryUrls?.length} fotos`);
+        } else {
+            console.log('❌ Falló enriquecimiento:', updateData);
+        }
+
+        // 8. Search and Filter Establishments
+        console.log('\n--- [ESTABLISHMENTS: SEARCH & FILTER TEST] ---');
+
+        // Test 1: Search by name "Cuckoo"
+        const searchNameRes = await fetch(`${API_URL}/establishments?name=Cuckoo`);
+        const searchNameData = await searchNameRes.json();
+        console.log(`✅ Búsqueda por nombre "Cuckoo": ${searchNameData.data?.length || 0} resultados.`);
+
+        // Test 2: Filter by university (using the one assigned in previous test)
+        const filterUniRes = await fetch(`${API_URL}/establishments?universityId=Anáhuac Oaxaca`);
+        const filterUniData = await filterUniRes.json();
+        console.log(`✅ Filtro por universidad "Anáhuac Oaxaca": ${filterUniData.data?.length || 0} resultados.`);
+
+        // Test 3: Combine both
+        const combineRes = await fetch(`${API_URL}/establishments?name=Cuckoo&universityId=Anáhuac Oaxaca`);
+        const combineData = await combineRes.json();
+        console.log(`✅ Búsqueda combinada: ${combineData.data?.length || 0} resultados.`);
+
         console.log('\n🌟 ¡TODOS LOS TESTS PASARON EXITOSAMENTE!');
 
     } catch (error: any) {

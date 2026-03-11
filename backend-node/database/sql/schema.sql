@@ -86,6 +86,11 @@ CREATE TABLE establishments (
   description text,
   category varchar(80), -- Mantengo varchar para simplicidad inicial, pero se puede normalizar luego
   manager_id uuid REFERENCES users(id) ON DELETE SET NULL,
+  university_id varchar(100),
+  location_details text,
+  opening_hours text,
+  gallery_urls text[] DEFAULT '{}',
+  menu_urls text[] DEFAULT '{}',
   is_active boolean NOT NULL DEFAULT true,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()

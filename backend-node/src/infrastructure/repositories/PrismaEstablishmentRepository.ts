@@ -13,8 +13,22 @@ export class PrismaEstablishmentRepository implements IEstablishmentRepository {
         return this.mapToEntity(data);
     }
 
-    async findAll(): Promise<Establishment[]> {
+    async findAll(filters?: { name?: string; universityId?: string }): Promise<Establishment[]> {
+        const where: any = {};
+
+        if (filters?.name) {
+            where.name = {
+                contains: filters.name,
+                mode: 'insensitive'
+            };
+        }
+
+        if (filters?.universityId) {
+            where.universityId = filters.universityId;
+        }
+
         const data = await this.prisma.establishment.findMany({
+            where,
             orderBy: { createdAt: 'desc' }
         });
         return data.map(this.mapToEntity);
@@ -27,6 +41,11 @@ export class PrismaEstablishmentRepository implements IEstablishmentRepository {
                 description: establishment.description,
                 category: establishment.category,
                 managerId: establishment.managerId,
+                universityId: establishment.universityId,
+                locationDetails: establishment.locationDetails,
+                openingHours: establishment.openingHours,
+                galleryUrls: establishment.galleryUrls,
+                menuUrls: establishment.menuUrls,
                 isActive: establishment.isActive,
             }
         });
@@ -43,6 +62,11 @@ export class PrismaEstablishmentRepository implements IEstablishmentRepository {
                 description: establishment.description,
                 category: establishment.category,
                 managerId: establishment.managerId,
+                universityId: establishment.universityId,
+                locationDetails: establishment.locationDetails,
+                openingHours: establishment.openingHours,
+                galleryUrls: establishment.galleryUrls,
+                menuUrls: establishment.menuUrls,
                 isActive: establishment.isActive,
             }
         });
@@ -60,6 +84,11 @@ export class PrismaEstablishmentRepository implements IEstablishmentRepository {
             description: data.description,
             category: data.category,
             managerId: data.managerId,
+            universityId: data.universityId,
+            locationDetails: data.locationDetails,
+            openingHours: data.openingHours,
+            galleryUrls: data.galleryUrls,
+            menuUrls: data.menuUrls,
             isActive: data.isActive,
             createdAt: data.createdAt,
             updatedAt: data.updatedAt,

@@ -5,6 +5,11 @@ export const CreateEstablishmentSchema = z.object({
     description: z.string().max(500).optional().nullable(),
     category: z.string().max(80).optional().nullable(),
     managerId: z.string().uuid().optional().nullable(),
+    universityId: z.string().max(100).optional().nullable(),
+    locationDetails: z.string().optional().nullable(),
+    openingHours: z.string().optional().nullable(),
+    galleryUrls: z.array(z.string().url()).optional(),
+    menuUrls: z.array(z.string().url()).optional(),
 });
 
 export const UpdateEstablishmentSchema = z.object({
@@ -12,6 +17,11 @@ export const UpdateEstablishmentSchema = z.object({
     description: z.string().max(500).optional().nullable(),
     category: z.string().max(80).optional().nullable(),
     managerId: z.string().uuid().optional().nullable(),
+    universityId: z.string().max(100).optional().nullable(),
+    locationDetails: z.string().optional().nullable(),
+    openingHours: z.string().optional().nullable(),
+    galleryUrls: z.array(z.string().url()).optional(),
+    menuUrls: z.array(z.string().url()).optional(),
     isActive: z.boolean().optional(),
 });
 

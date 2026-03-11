@@ -15,6 +15,11 @@ export class CreateEstablishmentUseCase {
             description: dto.description,
             category: dto.category,
             managerId: dto.managerId,
+            universityId: dto.universityId,
+            locationDetails: dto.locationDetails,
+            openingHours: dto.openingHours,
+            galleryUrls: dto.galleryUrls,
+            menuUrls: dto.menuUrls,
         });
 
         return await this.repository.save(establishment);
