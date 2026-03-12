@@ -1,60 +1,69 @@
-# Frontend - Feature-Sliced Design (FSD)
+# Restaurant Analytics - Frontend UI
 
-Este proyecto utiliza **Feature-Sliced Design (FSD)**, una arquitectura moderna para aplicaciones frontend que escala de manera profesional y evita el acoplamiento técnico.
-
----
-
-## ¿Qué es FSD?
-
-FSD organiza el código en **Capas (Layers)**, ordenadas de mayor a menor nivel de abstracción. La regla fundamental es: **una capa solo puede importar de capas inferiores**; nunca al revés.
+State-of-the-art dashboard built with **Vue 3**, **Vite**, and based on the **Feature-Sliced Design (FSD)** architectural methodology.
 
 ---
 
-## Estructura de Carpetas
+## 🏗️ Architecture: Feature-Sliced Design (FSD)
 
-```
+FSD is a modern architectural pattern for frontends that ensures scalability and clean dependency management. The project is organized into strictly defined layers:
+
+### Layers Hierarchy
+1.  **App**: Global setup, providers, and global styles.
+2.  **Pages**: Full-screen views composed of widgets and features.
+3.  **Widgets**: Autonomous UI blocks (e.g., Sidebar, Analytics Charts).
+4.  **Features**: User interactions that bring business value (e.g., Filter Establishments).
+5.  **Entities**: Domain models and their specific logic (e.g., Establishment, Review).
+6.  **Shared**: Generic, reusable assets and UI components.
+
+> 🛡️ **Rule of Dependencies**: A layer can only import from lower layers. Imports towards higher layers are strictly forbidden.
+
+---
+
+## 🚀 Technical Stack
+
+-   **Framework**: Vue 3 (Composition API)
+-   **Build Tool**: Vite
+-   **Styling**: Vanilla CSS / Tailwind (depending on configuration)
+-   **State Management**: Pinia (Reactive Store)
+-   **Routing**: Vue Router
+
+---
+
+## 📁 Folder Structure
+
+```text
 frontend/src/
-├── app/              ← Entrada global (App.vue, main.ts)
-├── pages/            ← Vistas completas de pantalla
-│   ├── home/
-│   └── establishments/
-├── widgets/          ← Bloques autónomos de UI
-│   ├── app-sidebar/
-│   ├── sentiment-chart/
-│   └── establishments-table/
-├── features/         ← Acciones del usuario con valor de negocio
-│   └── filter-establishments/
-├── entities/         ← Modelos del dominio
-│   ├── establishment/
-│   └── user/
-└── shared/           ← Código genérico reutilizable (CSS, utils, UI base)
-    └── assets/css/
+├── app/              # Global initialization (App.vue, router)
+├── pages/            # View components (Home, Dashboard)
+├── widgets/          # Complex, self-contained blocks
+├── features/         # User interaction logic
+├── entities/         # Business data models
+└── shared/           # Base UI, utils, constants
 ```
 
 ---
 
-## Reglas de Dependencia
+## 🛠️ Development
 
-| Capa | Puede importar de |
-|------|-------------------|
-| `app` | `pages`, `widgets`, `features`, `entities`, `shared` |
-| `pages` | `widgets`, `features`, `entities`, `shared` |
-| `widgets` | `features`, `entities`, `shared` |
-| `features` | `entities`, `shared` |
-| `entities` | `shared` |
-| `shared` | — (nada) |
+### Setup
+```bash
+npm install
+```
 
-> ⚠️ **Nunca** importes hacia arriba (ej: un `widget` no puede importar de un `page`).
+### Run
+```bash
+npm run dev
+```
+
+### Build for Production
+```bash
+npm run build
+```
 
 ---
 
-## ¿Dónde pongo mi código?
-
-| Tipo de código | Carpeta |
-|---|---|
-| Componente reutilizable (botón, input) | `shared/ui/` |
-| Modelo de dato de negocio (Establishment) | `entities/` |
-| Lógica de usuario (filtrar, buscar) | `features/` |
-| Bloque de UI grande y autónomo (sidebar) | `widgets/` |
-| Vista completa de página | `pages/` |
-| Setup global de la app | `app/` |
+## 📊 Visual Features
+-   **Interactive Charts**: Visualization of sentiment trends and IGE scores.
+-   **Responsive Design**: Optimized for desktops and mobile devices using modern CSS layouts.
+-   **Real-time Metrics**: Dynamic data fetching from the Node.js backend.
