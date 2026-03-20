@@ -51,6 +51,10 @@ frontend/src/
 npm install
 ```
 
+### Environment Variables
+Create a `.env` file from `.env.example`:
+-   `VITE_API_URL`: Base URL of the backend API (default: `http://localhost:3000`).
+
 ### Run
 ```bash
 npm run dev

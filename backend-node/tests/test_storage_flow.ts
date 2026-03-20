@@ -1,5 +1,14 @@
+/**
+ * Manual storage flow test script (legacy).
+ * For automated tests, use: npm run test (Vitest)
+ * See: tests/integration.test.ts
+ *
+ * To run this manually: npx ts-node tests/test_storage_flow.ts
+ * Requires the server to be running on port 3000.
+ */
+
 async function testStorageFlow() {
-    console.log('🚀 Iniciando Test de Flujo de Almacenamiento (Supabase)...\n');
+    console.log('Iniciando Test de Flujo de Almacenamiento (Supabase)...\n');
 
     try {
         // 1. Login to get token
@@ -8,13 +17,12 @@ async function testStorageFlow() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                email: 'admin@example.com',
+                email: 'admin@anahuac.mx',
                 password: 'password123'
             })
         });
         const loginData = await loginRes.json();
-        console.log('🔍 Login response status:', loginRes.status);
-        console.log('🔍 Login response data:', JSON.stringify(loginData, null, 2));
+        console.log('Login response status:', loginRes.status);
 
         if (!loginRes.ok || !loginData.data) {
             throw new Error(`Login fallido: ${JSON.stringify(loginData)}`);
@@ -22,17 +30,14 @@ async function testStorageFlow() {
 
         const token = loginData.data.token;
         const myId = loginData.data.user.id;
-        console.log('✅ Login Exitoso.');
+        console.log('Login Exitoso.');
 
         const authHeader = { Authorization: `Bearer ${token}` };
 
         // 2. Upload an image (simulated)
         console.log('\n--- [UPLOAD: TEST IMAGE] ---');
-        // We'll use a small buffer as a fake image for testing if no file exists
         const fakeImageBuffer = Buffer.from('fake-image-content');
         const formData = new FormData();
-
-        // In Node fetch, we can use Blob for file upload
         const blob = new Blob([fakeImageBuffer], { type: 'image/png' });
         formData.append('file', blob, 'test-image.png');
         formData.append('bucket', 'reviews-app-bucket');
@@ -47,7 +52,7 @@ async function testStorageFlow() {
         if (!uploadRes.ok) throw new Error(`Upload fallido: ${JSON.stringify(uploadData)}`);
 
         const publicUrl = uploadData.data.url;
-        console.log('✅ Imagen subida exitosamente:', publicUrl);
+        console.log('Imagen subida exitosamente:', publicUrl);
 
         // 3. Update User Profile with the new Image URL
         console.log('\n--- [USER: UPDATE PROFILE WITH AVATAR] ---');
@@ -60,32 +65,32 @@ async function testStorageFlow() {
             body: JSON.stringify({
                 avatarUrl: publicUrl,
                 bio: 'Desarrollador de software y entusiasta de la comida universitaria.',
-                universityId: 'Anáhuac Oaxaca'
+                universityId: 'Anahuac Oaxaca'
             })
         });
 
         const profileUpdateData = await updateProfileRes.json();
-        if (!updateProfileRes.ok) throw new Error(`Actualización de perfil fallida: ${JSON.stringify(profileUpdateData)}`);
-        console.log('✅ Perfil actualizado con avatar.');
+        if (!updateProfileRes.ok) throw new Error(`Actualizacion de perfil fallida: ${JSON.stringify(profileUpdateData)}`);
+        console.log('Perfil actualizado con avatar.');
 
         // 4. Verify in Public Profile
         console.log('\n--- [SOCIAL: VERIFY PUBLIC PROFILE] ---');
         const publicProfileRes = await fetch(`http://localhost:3000/api/users/${myId}/profile`, { headers: authHeader });
         const publicProfileData = await publicProfileRes.json();
 
-        console.log('🔍 Datos recuperados:');
+        console.log('Datos recuperados:');
         console.log(`   - Avatar: ${publicProfileData.data.avatarUrl}`);
         console.log(`   - Bio: ${publicProfileData.data.bio}`);
 
         if (publicProfileData.data.avatarUrl === publicUrl) {
-            console.log('\n🌟 ¡TEST DE FLUJO DE ALMACENAMIENTO COMPLETADO CON ÉXITO!');
+            console.log('\nTEST DE FLUJO DE ALMACENAMIENTO COMPLETADO CON EXITO!');
         } else {
-            console.log('\n❌ ERROR: El avatar no coincide con la URL subida.');
+            console.log('\nERROR: El avatar no coincide con la URL subida.');
         }
 
-    } catch (error: any) {
-        console.error('\n❌ ERROR DURANTE EL TEST:');
-        console.error(error.message);
+    } catch (error: unknown) {
+        const msg = error instanceof Error ? error.message : String(error);
+        console.error('\nERROR DURANTE EL TEST:', msg);
     }
 }
 

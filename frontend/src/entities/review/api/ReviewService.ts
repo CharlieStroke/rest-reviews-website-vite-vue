@@ -1,5 +1,5 @@
 import { httpClient } from '@/shared/api/httpClient';
-import type { CreateReviewRequest, ReviewResponse, MetricsSnapshot, Establishment } from '../model/types';
+import type { CreateReviewRequest, ReviewResponse, MetricsSnapshot, Establishment, PaginatedResponse } from '../model/types';
 
 export class ReviewService {
   static async create(request: CreateReviewRequest): Promise<ReviewResponse> {
@@ -23,9 +23,11 @@ export class ReviewService {
     });
   }
 
-  static async getEstablishments(): Promise<Establishment[]> {
-    const response = await httpClient.get<{data: Establishment[]}>('/api/establishments');
-    return response.data.data;
+  static async getEstablishments(page = 1, limit = 10): Promise<PaginatedResponse<Establishment>> {
+    const response = await httpClient.get<PaginatedResponse<Establishment>>('/api/establishments', {
+      params: { page, limit },
+    });
+    return response.data;
   }
 
   static async getMetrics(establishmentId: string): Promise<MetricsSnapshot> {

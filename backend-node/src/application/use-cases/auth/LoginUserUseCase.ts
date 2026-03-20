@@ -4,6 +4,7 @@ import { LoginUserDTO } from '../../dtos/AuthDTO';
 import { AppError } from '../../../infrastructure/http/errors/AppError';
 import * as argon2 from 'argon2';
 import * as jwt from 'jsonwebtoken';
+import prisma from '../../../infrastructure/database/prisma.service';
 
 interface LoginResponse {
     user: {
@@ -13,6 +14,7 @@ interface LoginResponse {
         name: string;
     };
     token: string;
+    refreshToken: string;
 }
 
 @injectable()
@@ -35,12 +37,29 @@ export class LoginUserUseCase {
         }
 
         const secret = process.env.JWT_SECRET || 'fallback-secret';
-        // Access token valid for 24h as per general standard, though the PRD mentions refresh tokens later.
+
         const token = jwt.sign(
             { userId: user.id, role: user.role, email: user.email },
             secret,
             { expiresIn: '24h' }
         );
+
+        const refreshToken = jwt.sign(
+            { userId: user.id, type: 'refresh' },
+            secret,
+            { expiresIn: '7d' }
+        );
+
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + 7);
+
+        await prisma.userSession.create({
+            data: {
+                userId: user.id,
+                refreshToken,
+                expiresAt
+            }
+        });
 
         return {
             user: {
@@ -49,7 +68,8 @@ export class LoginUserUseCase {
                 name: user.name,
                 role: user.role
             },
-            token
+            token,
+            refreshToken
         };
     }
 }

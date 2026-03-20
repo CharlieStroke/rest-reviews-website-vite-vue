@@ -9,6 +9,8 @@ const reviewRouter = Router();
 const reviewController = container.resolve(ReviewController);
 
 // Routes
+reviewRouter.get('/', reviewController.getAll);
+
 /**
  * @swagger
  * /reviews:

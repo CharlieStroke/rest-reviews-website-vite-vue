@@ -49,7 +49,12 @@ Inspired by Uncle Bob's Clean Architecture, this module is strictly decoupled:
     npx prisma db push
     ```
 
-4.  **Run Development**:
+4.  **Seed Database** (initial data for Anahuac Oaxaca campus):
+    ```bash
+    npm run prisma:seed
+    ```
+
+5.  **Run Development**:
     ```bash
     npm run dev
     ```
@@ -62,6 +67,8 @@ Inspired by Uncle Bob's Clean Architecture, this module is strictly decoupled:
 -   `npm run build`: Compiles TypeScript to `dist/`.
 -   `npm run prisma:generate`: Updates the Prisma client types.
 -   `npm run prisma:push`: Pushes schema changes to the DB without migrations.
+-   `npm run prisma:seed`: Seeds the database with initial data (4 establishments, 3 users, 8 reviews).
+-   `npm run test`: Runs integration tests with Vitest.
 
 ---
 

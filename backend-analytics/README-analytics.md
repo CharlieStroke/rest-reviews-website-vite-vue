@@ -67,4 +67,22 @@ python sentiment_model.py
 ---
 
 ## 📡 Node.js Integration
-This module is designed to be invoked as a child process. It returns execution metrics (accuracy, F1-score, and IGE averages) via a standardized JSON `stdout` contract.
+This module is designed to be invoked as a child process. It returns execution metrics via a standardized JSON `stdout` contract:
+
+```json
+{
+  "accuracy": 0.85,
+  "f1Score": 0.82,
+  "sentiment_label": "positive",
+  "ige_global": 72.5
+}
+```
+
+On error, the output is:
+```json
+{
+  "error": "error description"
+}
+```
+
+> **Warning**: Changing this JSON contract requires coordination with `backend-node` (see `AnalyticsService.ts`).
