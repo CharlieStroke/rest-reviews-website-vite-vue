@@ -51,13 +51,13 @@ const logout = () => {
         </router-link>
       </div>
 
-      <div class="sidebar-user-info">
+      <router-link to="/profile" class="sidebar-user-info" style="text-decoration: none; color: inherit;">
         <div class="user-avatar">{{ userInitials }}</div>
         <div class="user-details">
           <div class="user-name">{{ userName }}</div>
           <div class="user-meta">{{ userRole }}</div>
         </div>
-      </div>
+      </router-link>
       
       <div class="nav-item logout-btn" @click="logout">
         🚪 Cerrar Sesión

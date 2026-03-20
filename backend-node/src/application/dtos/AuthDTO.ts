@@ -15,6 +15,12 @@ export const LoginUserSchema = z.object({
 
 export type LoginUserDTO = z.infer<typeof LoginUserSchema>;
 
+export const RefreshTokenSchema = z.object({
+    refreshToken: z.string().min(1, 'Refresh token is required'),
+});
+
+export type RefreshTokenDTO = z.infer<typeof RefreshTokenSchema>;
+
 export const VerifyEmailSchema = z.object({
     email: z.string().email('Invalid email address'),
     code: z.string().length(6, 'Verification code must be 6 digits'),

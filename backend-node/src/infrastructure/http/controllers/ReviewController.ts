@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { injectable, inject } from 'tsyringe';
 import { CreateReviewUseCase } from '../../../application/use-cases/reviews/CreateReviewUseCase';
 import { ListEstablishmentReviewsUseCase } from '../../../application/use-cases/reviews/ListEstablishmentReviewsUseCase';
+import { ListReviewsUseCase } from '../../../application/use-cases/reviews/ListReviewsUseCase';
 import { CreateReviewSchema } from '../../../application/dtos/ReviewDTO';
 
 import { createPaginatedResponse } from '../utils/Pagination';
@@ -10,8 +11,57 @@ import { createPaginatedResponse } from '../utils/Pagination';
 export class ReviewController {
     constructor(
         @inject(CreateReviewUseCase) private createReviewUseCase: CreateReviewUseCase,
-        @inject(ListEstablishmentReviewsUseCase) private listReviewsUseCase: ListEstablishmentReviewsUseCase
+        @inject(ListEstablishmentReviewsUseCase) private listEstablishmentReviewsUseCase: ListEstablishmentReviewsUseCase,
+        @inject(ListReviewsUseCase) private listReviewsUseCase: ListReviewsUseCase
     ) { }
+
+    /**
+     * @swagger
+     * /reviews:
+     *   get:
+     *     summary: List all reviews with pagination
+     *     tags: [Reviews]
+     *     parameters:
+     *       - in: query
+     *         name: page
+     *         schema:
+     *           type: integer
+     *           default: 1
+     *         description: Page number
+     *       - in: query
+     *         name: limit
+     *         schema:
+     *           type: integer
+     *           default: 10
+     *         description: Results per page
+     *     responses:
+     *       200:
+     *         description: Paginated list of reviews
+     */
+    public getAll = async (req: Request, res: Response): Promise<void> => {
+        const { page, limit } = req.query;
+        const pageNum = parseInt(page as string) || 1;
+        const limitNum = parseInt(limit as string) || 10;
+
+        const { data, total } = await this.listReviewsUseCase.execute({ page: pageNum, limit: limitNum });
+
+        const formatted = data.map(r => ({
+            id: r.id,
+            author: r.authorName,
+            establishmentId: r.establishmentId,
+            comment: r.comment,
+            foodScore: r.foodScore,
+            serviceScore: r.serviceScore,
+            priceScore: r.priceScore,
+            imageUrl: r.imageUrl,
+            sentiment: r.sentiment,
+            createdAt: r.createdAt
+        }));
+
+        res.status(200).json(
+            createPaginatedResponse(formatted, total, pageNum, limitNum)
+        );
+    };
 
     /**
      * @swagger
@@ -45,7 +95,7 @@ export class ReviewController {
         const pageNum = parseInt(page as string) || 1;
         const limitNum = parseInt(limit as string) || 10;
 
-        const { data, total } = await this.listReviewsUseCase.execute(id as string, { page: pageNum, limit: limitNum });
+        const { data, total } = await this.listEstablishmentReviewsUseCase.execute(id as string, { page: pageNum, limit: limitNum });
 
         const formatted = data.map(r => ({
             id: r.id,

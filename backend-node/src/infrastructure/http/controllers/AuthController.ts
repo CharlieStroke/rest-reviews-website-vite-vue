@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { RegisterUserUseCase } from '../../../application/use-cases/auth/RegisterUserUseCase';
 import { LoginUserUseCase } from '../../../application/use-cases/auth/LoginUserUseCase';
-import { RegisterUserSchema, LoginUserSchema } from '../../../application/dtos/AuthDTO';
+import { RefreshTokenUseCase } from '../../../application/use-cases/auth/RefreshTokenUseCase';
+import { RegisterUserSchema, LoginUserSchema, RefreshTokenSchema } from '../../../application/dtos/AuthDTO';
 import { injectable, inject } from 'tsyringe';
 
 import { AuthRequest } from '../middlewares/AuthMiddleware';
@@ -14,6 +15,7 @@ export class AuthController {
     constructor(
         @inject(RegisterUserUseCase) private registerUserUseCase: RegisterUserUseCase,
         @inject(LoginUserUseCase) private loginUserUseCase: LoginUserUseCase,
+        @inject(RefreshTokenUseCase) private refreshTokenUseCase: RefreshTokenUseCase,
         @inject(GetUserUseCase) private getUserUseCase: GetUserUseCase,
         @inject(UpdateUserUseCase) private updateUserUseCase: UpdateUserUseCase
     ) { }
@@ -109,6 +111,41 @@ export class AuthController {
     public login = async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
         const validatedData = LoginUserSchema.parse(req.body);
         const result = await this.loginUserUseCase.execute(validatedData);
+
+        res.status(200).json({
+            success: true,
+            data: result
+        });
+    };
+
+    /**
+     * @swagger
+     * /auth/refresh:
+     *   post:
+     *     summary: Refresh access token using a valid refresh token
+     *     tags: [Auth]
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             required:
+     *               - refreshToken
+     *             properties:
+     *               refreshToken:
+     *                 type: string
+     *     responses:
+     *       200:
+     *         description: New access token
+     *       401:
+     *         description: Invalid or expired refresh token
+     *       429:
+     *         description: Too many requests
+     */
+    public refresh = async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
+        const validatedData = RefreshTokenSchema.parse(req.body);
+        const result = await this.refreshTokenUseCase.execute(validatedData);
 
         res.status(200).json({
             success: true,

@@ -1,7 +1,15 @@
+/**
+ * Manual metrics test script (legacy).
+ * For automated tests, use: npm run test (Vitest)
+ * See: tests/integration.test.ts
+ *
+ * To run this manually: npx ts-node tests/test_metrics.ts
+ * Requires the server to be running on port 3000.
+ */
 
 async function testMetrics() {
     const API_URL = 'http://localhost:3000/api';
-    console.log('🚀 Iniciando Test de Dashboard Analytics...');
+    console.log('Iniciando Test de Dashboard Analytics...');
 
     try {
         // 1. LOGIN
@@ -10,51 +18,50 @@ async function testMetrics() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                email: 'admin@example.com',
+                email: 'admin@anahuac.mx',
                 password: 'password123'
             })
         });
-        const loginData: any = await loginRes.json();
+        const loginData: Record<string, unknown> = await loginRes.json() as Record<string, unknown>;
         if (!loginRes.ok) throw new Error('Login fallido');
-        const token = loginData.data.token;
-        console.log('✅ Login Exitoso.');
+        const data = loginData.data as Record<string, unknown>;
+        const token = data.token as string;
+        console.log('Login Exitoso.');
 
         // 2. GET SUMMARY
         console.log('\n--- [METRICS: GET SUMMARY] ---');
         const summaryRes = await fetch(`${API_URL}/metrics/summary`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        const summaryData: any = await summaryRes.json();
-        console.log('✅ Resumen global obtenido:', JSON.stringify(summaryData.data, null, 2));
+        const summaryData: Record<string, unknown> = await summaryRes.json() as Record<string, unknown>;
+        console.log('Resumen global obtenido:', JSON.stringify(summaryData, null, 2));
 
-        // 3. GET HISTORY (We use the first establishment found in summary)
-        const estId = summaryData.data.topEstablishments[0]?.id;
+        // 3. GET HISTORY
+        const summaryInner = summaryData.data as Record<string, unknown>;
+        const topEstablishments = summaryInner.topEstablishments as Array<Record<string, unknown>>;
+        const estId = topEstablishments?.[0]?.id;
         if (estId) {
             console.log(`\n--- [METRICS: GET HISTORY FOR ${estId}] ---`);
             const historyRes = await fetch(`${API_URL}/metrics/establishment/${estId}/history?days=30`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            const historyData: any = await historyRes.json();
+            const historyData: Record<string, unknown> = await historyRes.json() as Record<string, unknown>;
 
             if (historyRes.ok) {
-                console.log('✅ Historial obtenido con éxito.');
-                console.log(`📊 Puntos de datos: ${historyData.data.series.length}`);
-                if (historyData.data.series.length > 0) {
-                    console.log('📈 Último punto:', JSON.stringify(historyData.data.series[historyData.data.series.length - 1], null, 2));
-                } else {
-                    console.log('⚠️ No hay snapshots previos, el array está vacío (Correcto si no se ha corrido el seeder analítico).');
-                }
+                console.log('Historial obtenido con exito.');
             } else {
-                console.error('❌ Error al obtener historial:', historyData.message);
+                const msg = (historyData as Record<string, unknown>).message;
+                console.error('Error al obtener historial:', msg);
             }
         } else {
-            console.warn('⚠️ No se encontraron establecimientos para probar el historial.');
+            console.warn('No se encontraron establecimientos para probar el historial.');
         }
 
-        console.log('\n🌟 ¡TEST DE MÉTRICAS FINALIZADO!');
+        console.log('\nTEST DE METRICAS FINALIZADO!');
 
-    } catch (error: any) {
-        console.error('\n❌ ERROR DURANTE EL TEST:', error.message);
+    } catch (error: unknown) {
+        const msg = error instanceof Error ? error.message : String(error);
+        console.error('\nERROR DURANTE EL TEST:', msg);
     }
 }
 
