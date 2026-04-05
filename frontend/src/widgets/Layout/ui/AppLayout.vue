@@ -55,17 +55,27 @@ const isActive = (path: string) => route.path.includes(path);
             Inicio
           </router-link>
           <router-link
+            v-if="authStore.user?.role === 'student'"
             to="/my-reviews"
             class="transition-colors border-b-2 pb-1 text-sm"
             :class="isActive('/my-reviews') ? 'text-orange-500 font-bold border-orange-500' : 'text-[#adaaad] hover:text-white border-transparent font-medium'"
           >
             Mis Reseñas
           </router-link>
+          <router-link
+            v-if="authStore.user?.role === 'admin'"
+            to="/admin"
+            class="transition-colors border-b-2 pb-1 text-sm"
+            :class="isActive('/admin') ? 'text-orange-500 font-bold border-orange-500' : 'text-[#adaaad] hover:text-white border-transparent font-medium'"
+          >
+            Panel Admin
+          </router-link>
         </div>
 
         <!-- Desktop Right Actions -->
         <div class="hidden md:flex items-center space-x-4">
           <router-link
+            v-if="authStore.user?.role === 'student'"
             to="/establishments"
             class="bg-orange-500 hover:bg-orange-400 text-white font-bold py-2 px-5 rounded-lg text-sm shadow-lg transition-all duration-200 active:scale-95"
           >
@@ -155,12 +165,22 @@ const isActive = (path: string) => route.path.includes(path);
               Inicio
             </router-link>
             <router-link
+              v-if="authStore.user?.role === 'student'"
               to="/my-reviews"
               class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors"
               :class="isActive('/my-reviews') ? 'bg-orange-500/10 text-orange-400' : 'text-[#adaaad] hover:bg-white/5 hover:text-white'"
             >
               <span class="material-symbols-outlined text-base">rate_review</span>
               Mis Reseñas
+            </router-link>
+            <router-link
+              v-if="authStore.user?.role === 'admin'"
+              to="/admin"
+              class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors"
+              :class="isActive('/admin') ? 'bg-orange-500/10 text-orange-400' : 'text-[#adaaad] hover:bg-white/5 hover:text-white'"
+            >
+              <span class="material-symbols-outlined text-base">admin_panel_settings</span>
+              Panel Admin
             </router-link>
             <router-link
               to="/profile"

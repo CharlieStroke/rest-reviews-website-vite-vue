@@ -3,11 +3,13 @@ import { ref, onMounted } from 'vue';
 import { ReviewService } from '@/entities/review/api/ReviewService';
 import type { Establishment } from '@/entities/review/model/types';
 import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/entities/user/model/authStore';
 
 const establishments = ref<Establishment[]>([]);
 const loading = ref(true);
 const errorMsg = ref<string | null>(null);
 const router = useRouter();
+const authStore = useAuthStore();
 
 const fetchEstablishments = async () => {
   loading.value = true;
@@ -105,6 +107,7 @@ const goToDetails = (id: string) => {
             Ver Detalles
           </button>
           <button
+            v-if="authStore.user?.role === 'student'"
             @click="goToReview(est.id)"
             class="flex-1 py-2.5 text-sm font-bold bg-orange-500 hover:bg-orange-400 text-white rounded-xl transition-colors active:scale-95"
           >
