@@ -1,19 +1,16 @@
 import { Request, Response } from 'express';
 import { injectable, inject } from 'tsyringe';
 import { CreateEstablishmentUseCase } from '../../../application/use-cases/establishments/CreateEstablishmentUseCase';
-import { GetEstablishmentUseCase } from '../../../application/use-cases/establishments/GetEstablishmentUseCase';
 import { ListEstablishmentsUseCase } from '../../../application/use-cases/establishments/ListEstablishmentsUseCase';
 import { UpdateEstablishmentUseCase } from '../../../application/use-cases/establishments/UpdateEstablishmentUseCase';
 import { DeleteEstablishmentUseCase } from '../../../application/use-cases/establishments/DeleteEstablishmentUseCase';
 import { CreateEstablishmentSchema, UpdateEstablishmentSchema } from '../../../application/dtos/EstablishmentDTO';
-import { createPaginatedResponse } from '../utils/Pagination';
 import { AuthRequest } from '../middlewares/AuthMiddleware';
 
 @injectable()
 export class EstablishmentController {
     constructor(
         @inject(CreateEstablishmentUseCase) private createUseCase: CreateEstablishmentUseCase,
-        @inject(GetEstablishmentUseCase) private getUseCase: GetEstablishmentUseCase,
         @inject(ListEstablishmentsUseCase) private listUseCase: ListEstablishmentsUseCase,
         @inject(UpdateEstablishmentUseCase) private updateUseCase: UpdateEstablishmentUseCase,
         @inject(DeleteEstablishmentUseCase) private deleteUseCase: DeleteEstablishmentUseCase
@@ -47,73 +44,15 @@ export class EstablishmentController {
      * @swagger
      * /establishments:
      *   get:
-     *     summary: List establishments with optional filters and pagination
+     *     summary: List all campus establishments (max ~10, no pagination needed)
      *     tags: [Establishments]
-     *     parameters:
-     *       - in: query
-     *         name: name
-     *         schema:
-     *           type: string
-     *         description: Filter by name (partial match)
-     *       - in: query
-     *         name: universityId
-     *         schema:
-     *           type: string
-     *         description: Filter by university ID
-     *       - in: query
-     *         name: page
-     *         schema:
-     *           type: integer
-     *           default: 1
-     *         description: Page number
-     *       - in: query
-     *         name: limit
-     *         schema:
-     *           type: integer
-     *           default: 10
-     *         description: Results per page
      *     responses:
      *       200:
-     *         description: OK
+     *         description: Array of all establishments
      */
-    public getAll = async (req: Request, res: Response): Promise<void> => {
-        const { name, universityId, page, limit } = req.query;
-        const pageNum = parseInt(page as string) || 1;
-        const limitNum = parseInt(limit as string) || 10;
-
-        const { data, total } = await this.listUseCase.execute(
-            {
-                name: name as string,
-                universityId: universityId as string
-            },
-            { page: pageNum, limit: limitNum }
-        );
-
-        res.status(200).json(
-            createPaginatedResponse(data, total, pageNum, limitNum)
-        );
-    };
-
-    /**
-     * @swagger
-     * /establishments/{id}:
-     *   get:
-     *     summary: Get establishment by ID
-     *     tags: [Establishments]
-     *     parameters:
-     *       - in: path
-     *         name: id
-     *         required: true
-     *         schema:
-     *           type: string
-     *     responses:
-     *       200:
-     *         description: OK
-     */
-    public getById = async (req: Request, res: Response): Promise<void> => {
-        const id = req.params.id as string;
-        const establishment = await this.getUseCase.execute(id);
-        res.status(200).json({ success: true, data: establishment });
+    public getAll = async (_req: Request, res: Response): Promise<void> => {
+        const { data } = await this.listUseCase.execute();
+        res.status(200).json({ success: true, data });
     };
 
     /**
