@@ -10,12 +10,19 @@ const email = ref('');
 const password = ref('');
 const loading = ref(false);
 
+const roleRedirect: Record<string, string> = {
+  admin: '/admin',
+  manager: '/manager',
+  student: '/dashboard',
+};
+
 const handleLogin = async () => {
   if (!email.value || !password.value) return;
   loading.value = true;
   try {
     await authStore.login({ email: email.value, password: password.value });
-    router.push('/dashboard');
+    const role = authStore.userRole ?? 'student';
+    router.push(roleRedirect[role] ?? '/dashboard');
   } catch (e) {
     // Error is handled by store
   } finally {

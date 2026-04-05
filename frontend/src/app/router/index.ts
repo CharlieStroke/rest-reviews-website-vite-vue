@@ -81,7 +81,10 @@ export const router = createRouter({
 
 router.beforeEach(async (to) => {
   const authStore = useAuthStore();
-  const requiresAuth = to.meta.requiresAuth;
+
+  // Check requiresAuth from matched routes (parent meta inheritance)
+  const requiresAuth = to.matched.some(r => r.meta.requiresAuth);
+  // Use the most-specific (deepest) route's roles list
   const allowedRoles = to.meta.roles as string[] | undefined;
 
   if (requiresAuth && !authStore.isAuthenticated) {
@@ -89,6 +92,10 @@ router.beforeEach(async (to) => {
   }
 
   if (requiresAuth && allowedRoles && authStore.userRole && !allowedRoles.includes(authStore.userRole)) {
+    // Redirect to the user's home instead of a generic /dashboard
+    const role = authStore.userRole;
+    if (role === 'admin') return '/admin';
+    if (role === 'manager') return '/manager';
     return '/dashboard';
   }
 
