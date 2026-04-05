@@ -36,8 +36,8 @@ export class EstablishmentController {
      */
     public create = async (req: Request, res: Response): Promise<void> => {
         const validatedData = CreateEstablishmentSchema.parse(req.body);
-        const establishment = await this.createUseCase.execute(validatedData);
-        res.status(201).json({ success: true, data: establishment });
+        const e = await this.createUseCase.execute(validatedData);
+        res.status(201).json({ success: true, data: { id: e.id, name: e.name, description: e.description, category: e.category, managerId: e.managerId, isActive: e.isActive } });
     };
 
     /**
@@ -52,7 +52,20 @@ export class EstablishmentController {
      */
     public getAll = async (_req: Request, res: Response): Promise<void> => {
         const { data } = await this.listUseCase.execute();
-        res.status(200).json({ success: true, data });
+        const mapped = data.map(e => ({
+            id: e.id,
+            name: e.name,
+            description: e.description,
+            category: e.category,
+            managerId: e.managerId,
+            isActive: e.isActive,
+            locationDetails: e.locationDetails,
+            openingHours: e.openingHours,
+            galleryUrls: e.galleryUrls,
+            menuUrls: e.menuUrls,
+            createdAt: e.createdAt,
+        }));
+        res.status(200).json({ success: true, data: mapped });
     };
 
     /**
@@ -89,7 +102,7 @@ export class EstablishmentController {
             role: user.role
         } : undefined);
         
-        res.status(200).json({ success: true, data: establishment });
+        res.status(200).json({ success: true, data: { id: establishment.id, name: establishment.name, description: establishment.description, category: establishment.category, managerId: establishment.managerId, isActive: establishment.isActive } });
     };
 
     /**

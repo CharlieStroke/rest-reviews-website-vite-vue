@@ -43,6 +43,7 @@ const isValid = computed(() => {
   const base = form.value.name.length >= 2 &&
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.value.email) &&
     form.value.password.length >= 6;
+  if (form.value.role === 'manager') return base && !!form.value.establishmentId;
   return base;
 });
 
@@ -190,7 +191,7 @@ const close = () => emit('close');
               <div v-if="form.role === 'manager'">
                 <label class="block text-xs font-bold uppercase tracking-widest text-[#adaaad] mb-2">
                   Establecimiento asignado
-                  <span class="text-[#adaaad]/50 normal-case font-normal tracking-normal ml-1">(opcional)</span>
+                  <span class="text-red-400 ml-1">*</span>
                 </label>
                 <select
                   v-model="form.establishmentId"
@@ -206,7 +207,7 @@ const close = () => emit('close');
                     {{ e.name }}{{ e.category ? ` · ${e.category}` : '' }}
                   </option>
                 </select>
-                <p class="text-[10px] text-[#adaaad]/60 mt-1.5">El gerente podrá ver las métricas y responder reseñas de este establecimiento.</p>
+                <p class="text-[10px] text-[#adaaad]/60 mt-1.5">Obligatorio para gerentes. Podrá ver métricas y responder reseñas de este establecimiento.</p>
               </div>
             </Transition>
 
