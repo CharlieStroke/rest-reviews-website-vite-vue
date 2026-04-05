@@ -46,6 +46,33 @@ const handleSendReply = (payload: { reviewId: string, message: string }) => {
     rev.status = 'replied';
   }
 };
+
+// Mock Establishment Profile Data
+const isSavingProfile = ref(false);
+const profileData = ref({
+  name: 'DelyFull',
+  category: 'Restaurante',
+  bio: 'Comida saludable y antojitos 100% oaxaqueños (tlayudas, tacos, opciones veganas).',
+  location: 'Campus Norte',
+  images: [
+    'https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
+    'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'
+  ]
+});
+
+const saveProfile = () => {
+  isSavingProfile.value = true;
+  setTimeout(() => {
+    isSavingProfile.value = false;
+    placeName.value = profileData.value.name;
+    // Show some success feedback mock
+  }, 1000);
+};
+
+const triggerImageUpload = () => {
+  // Mock image upload trigger
+  console.log('Triggering image upload logic...');
+};
 </script>
 
 <template>
@@ -91,7 +118,81 @@ const handleSendReply = (payload: { reviewId: string, message: string }) => {
       </div>
     </section>
 
-    <!-- Reviews Management -->
+    <!-- Establishment Profile Edit Section -->
+    <section class="mb-16">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold tracking-tight text-white brand">Perfil del Establecimiento</h2>
+        <button 
+          @click="saveProfile"
+          :disabled="isSavingProfile"
+          class="flex items-center gap-2 bg-orange-500 hover:bg-orange-400 text-white font-bold py-2.5 px-6 rounded-xl transition-all shadow-[0_4px_14px_rgba(249,115,22,0.3)] active:scale-95 disabled:opacity-50"
+        >
+          <span class="material-symbols-outlined text-sm" :class="isSavingProfile ? 'animate-spin' : ''">
+            {{ isSavingProfile ? 'progress_activity' : 'save' }}
+          </span>
+          {{ isSavingProfile ? 'Guardando...' : 'Guardar Cambios' }}
+        </button>
+      </div>
+
+      <div class="card-cream rounded-[1.5rem] p-8 shadow-xl border border-black/5">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+          
+          <!-- Text Data -->
+          <div class="flex flex-col gap-6">
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-widest text-[#525155] mb-2">Nombre del Local</label>
+              <input v-model="profileData.name" type="text" class="w-full bg-white border border-black/10 rounded-xl px-4 py-3 text-[#0e0e10] font-bold focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-shadow" placeholder="Ej. DelyFull" />
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-widest text-[#525155] mb-2">Categoría</label>
+                <select v-model="profileData.category" class="w-full bg-white border border-black/10 rounded-xl px-4 py-3 text-[#0e0e10] font-bold focus:outline-none focus:ring-2 focus:ring-orange-500 transition-shadow appearance-none">
+                  <option>Restaurante</option>
+                  <option>Cafetería</option>
+                  <option>Snacks</option>
+                  <option>Comida Rápida</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-widest text-[#525155] mb-2">Ubicación</label>
+                <input v-model="profileData.location" type="text" class="w-full bg-white border border-black/10 rounded-xl px-4 py-3 text-[#0e0e10] font-bold focus:outline-none focus:ring-2 focus:ring-orange-500 transition-shadow" placeholder="Ej. Campus Norte" />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-widest text-[#525155] mb-2">Biografía / Descripción</label>
+              <textarea v-model="profileData.bio" rows="4" class="w-full bg-white border border-black/10 rounded-xl px-4 py-3 text-[#3f3f42] font-medium focus:outline-none focus:ring-2 focus:ring-orange-500 transition-shadow resize-none" placeholder="Describe qué hace especial a tu comida..."></textarea>
+            </div>
+          </div>
+
+          <!-- Media / Images -->
+          <div class="flex flex-col gap-4">
+            <label class="block text-xs font-bold uppercase tracking-widest text-[#525155]">Galería e Imágenes del Menú</label>
+            <div class="grid grid-cols-2 gap-4">
+              <div v-for="(img, idx) in profileData.images" :key="idx" class="relative rounded-xl overflow-hidden aspect-video group shadow-sm border border-black/5">
+                <img :src="img" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <button class="absolute top-2 right-2 w-8 h-8 bg-red-500/90 text-white rounded-lg flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-md">
+                  <span class="material-symbols-outlined text-sm">delete</span>
+                </button>
+              </div>
+              
+              <!-- Upload Placeholder -->
+              <button @click="triggerImageUpload" class="rounded-xl aspect-video border-2 border-dashed border-orange-500/30 bg-orange-50 hover:bg-orange-100/50 flex flex-col items-center justify-center gap-2 text-orange-500 transition-colors group">
+                <span class="material-symbols-outlined text-3xl group-hover:-translate-y-1 transition-transform">add_photo_alternate</span>
+                <span class="text-xs font-bold tracking-wide">Subir Imagen</span>
+              </button>
+            </div>
+            <p class="text-xs text-[#adaaad] mt-2">
+              Puedes subir hasta 6 imágenes de tu establecimiento o menú. Recomendado: 1920x1080px.
+            </p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Reviews Management (API endpoints via form) -->
     <section>
       <div class="flex items-center justify-between mb-6">
         <h2 class="text-2xl font-bold tracking-tight text-white brand">Reseñas Pendientes de Respuesta</h2>

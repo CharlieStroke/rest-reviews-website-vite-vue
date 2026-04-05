@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useAuthStore } from '@/entities/user/model/authStore';
 
+const authStore = useAuthStore();
 const route = useRoute();
 const router = useRouter();
 const establishmentId = route.params.id;
@@ -85,7 +87,7 @@ const goToReview = () => {
     <div class="max-w-4xl mx-auto px-6 mt-28 mb-16 space-y-12">
       
       <!-- Call To Action -->
-      <div class="flex justify-center my-8">
+      <div v-if="authStore.user?.role === 'student'" class="flex justify-center my-8">
         <button @click="goToReview" class="w-full md:w-2/3 py-5 text-xl tracking-wide bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold rounded-2xl shadow-lg hover:shadow-orange-500/30 hover:-translate-y-1 transition-all flex items-center justify-center gap-2">
           <span class="material-symbols-outlined font-bold">edit_square</span>
           Escribir una Reseña
