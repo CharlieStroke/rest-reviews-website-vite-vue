@@ -10,7 +10,6 @@ const reviewController = container.resolve(ReviewController);
 
 // Public Routes
 establishmentRouter.get('/', controller.getAll);
-establishmentRouter.get('/:id', controller.getById);
 establishmentRouter.get('/:id/reviews', reviewController.getByEstablishment);
 
 // Protected Routes
