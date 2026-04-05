@@ -4,6 +4,7 @@ import { GetGlobalMetricsUseCase } from '../../../application/use-cases/metrics/
 import { GetEstablishmentMetricsUseCase } from '../../../application/use-cases/metrics/GetEstablishmentMetricsUseCase';
 import { GetManagerEstablishmentsUseCase } from '../../../application/use-cases/metrics/GetManagerEstablishmentsUseCase';
 import { GetHistoricalMetricsUseCase } from '../../../application/use-cases/metrics/GetHistoricalMetricsUseCase';
+import { RunAnalyticsUseCase } from '../../../application/use-cases/metrics/RunAnalyticsUseCase';
 import { AuthRequest } from '../middlewares/AuthMiddleware';
 import { AppError } from '../errors/AppError';
 import { TimeSeriesQuerySchema } from '../../../application/dtos/MetricsDTO';
@@ -14,7 +15,8 @@ export class MetricsController {
         @inject(GetGlobalMetricsUseCase) private getGlobalMetricsUseCase: GetGlobalMetricsUseCase,
         @inject(GetEstablishmentMetricsUseCase) private getEstablishmentMetricsUseCase: GetEstablishmentMetricsUseCase,
         @inject(GetManagerEstablishmentsUseCase) private getManagerEstablishmentsUseCase: GetManagerEstablishmentsUseCase,
-        @inject(GetHistoricalMetricsUseCase) private getHistoricalMetricsUseCase: GetHistoricalMetricsUseCase
+        @inject(GetHistoricalMetricsUseCase) private getHistoricalMetricsUseCase: GetHistoricalMetricsUseCase,
+        @inject(RunAnalyticsUseCase) private runAnalyticsUseCase: RunAnalyticsUseCase
     ) { }
 
     /**
@@ -137,5 +139,27 @@ export class MetricsController {
 
         const metrics = await this.getEstablishmentMetricsUseCase.execute(id as string);
         res.status(200).json({ success: true, data: metrics });
+    };
+
+    /**
+     * @swagger
+     * /metrics/run:
+     *   post:
+     *     summary: Trigger the ML analytics pipeline (Admin only)
+     *     tags: [Analytics]
+     *     security:
+     *       - bearerAuth: []
+     *     responses:
+     *       200:
+     *         description: Pipeline result with accuracy, f1Score, sentiment_label, ige_global
+     *       403:
+     *         description: Forbidden — admin role required
+     */
+    public runPipeline = async (req: AuthRequest, res: Response): Promise<void> => {
+        const user = req.user;
+        if (!user) throw new AppError('Unauthorized', 401);
+
+        const result = await this.runAnalyticsUseCase.execute();
+        res.status(200).json({ success: true, data: result });
     };
 }
