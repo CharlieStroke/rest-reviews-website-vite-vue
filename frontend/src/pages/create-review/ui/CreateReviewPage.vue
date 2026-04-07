@@ -55,6 +55,8 @@ const onFileSelect = async (e: any) => {
   e.target.value = '';
 
   const file = files[0];
+  if (!file) return;
+
   const entry: UploadedImage = {
     previewUrl: URL.createObjectURL(file),
     remoteUrl: null,
@@ -62,28 +64,32 @@ const onFileSelect = async (e: any) => {
     file,
   };
   uploadedImages.value.push(entry);
-  const idx = uploadedImages.value.length - 1;
 
   try {
     const formData = new FormData();
     formData.append('file', file);
+    // Eliminar Content-Type del header para que axios calcule
+    // automáticamente el boundary de multipart/form-data
     const { data } = await httpClient.post<{ success: boolean; data: { url: string } }>(
       '/api/upload',
       formData,
-      { headers: { 'Content-Type': 'multipart/form-data' } }
+      { headers: { 'Content-Type': undefined } }
     );
-    uploadedImages.value[idx].remoteUrl = data.data.url;
+    entry.remoteUrl = data.data.url;
   } catch {
     // Si falla el upload, mostrar error en la imagen y permitir quitar
-    uploadedImages.value[idx].remoteUrl = null;
+    entry.remoteUrl = null;
   } finally {
-    uploadedImages.value[idx].uploading = false;
+    entry.uploading = false;
   }
 };
 
 const removeImage = (idx: number) => {
-  URL.revokeObjectURL(uploadedImages.value[idx].previewUrl);
-  uploadedImages.value.splice(idx, 1);
+  const img = uploadedImages.value[idx];
+  if (img) {
+    URL.revokeObjectURL(img.previewUrl);
+    uploadedImages.value.splice(idx, 1);
+  }
 };
 
 const submitReview = async () => {
