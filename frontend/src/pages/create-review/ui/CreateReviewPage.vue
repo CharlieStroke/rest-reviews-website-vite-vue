@@ -56,13 +56,13 @@ const onFileSelect = async (e: any) => {
   const file = files[0];
   if (!file) return;
 
-  const entry: UploadedImage = {
+  const idx = uploadedImages.value.length;
+  uploadedImages.value.push({
     previewUrl: URL.createObjectURL(file),
     remoteUrl: null,
     uploading: true,
     file,
-  };
-  uploadedImages.value.push(entry);
+  });
 
   try {
     const formData = new FormData();
@@ -74,13 +74,17 @@ const onFileSelect = async (e: any) => {
       headers: { Authorization: `Bearer ${token}` },
       body: formData,
     });
-    if (!res.ok) throw new Error('Upload failed');
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => ({})) as any;
+      throw new Error(errBody?.message || `HTTP ${res.status}`);
+    }
     const json = await res.json() as { success: boolean; data: { url: string } };
-    entry.remoteUrl = json.data.url;
-  } catch {
-    entry.remoteUrl = null;
+    uploadedImages.value[idx].remoteUrl = json.data.url;
+  } catch (err) {
+    console.error('[Upload]', err);
+    uploadedImages.value[idx].remoteUrl = null;
   } finally {
-    entry.uploading = false;
+    uploadedImages.value[idx].uploading = false;
   }
 };
 
