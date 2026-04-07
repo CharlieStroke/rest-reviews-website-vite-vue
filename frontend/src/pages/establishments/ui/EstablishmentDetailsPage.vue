@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/entities/user/model/authStore';
 import { ReviewService } from '@/entities/review/api/ReviewService';
@@ -51,6 +51,39 @@ const initials = (name: string | null) => {
   if (!name) return '?';
   return name.split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase();
 };
+
+// ── Lightbox ──────────────────────────────────────────────────────────────────
+interface LightboxItem { url: string; comment: string | null; author: string | null; }
+
+const lightboxItems = computed<LightboxItem[]>(() =>
+  reviews.value
+    .filter(r => r.imageUrl)
+    .map(r => ({ url: r.imageUrl!, comment: r.comment ?? null, author: r.author }))
+);
+
+const lightboxIdx = ref(0);
+const lightboxOpen = ref(false);
+
+const openLightbox = (reviewId: string) => {
+  const idx = lightboxItems.value.findIndex(
+    (_, i) => reviews.value.filter(r => r.imageUrl)[i]?.id === reviewId
+  );
+  lightboxIdx.value = idx >= 0 ? idx : 0;
+  lightboxOpen.value = true;
+};
+
+const closeLightbox = () => { lightboxOpen.value = false; };
+const prevImage = () => { lightboxIdx.value = (lightboxIdx.value - 1 + lightboxItems.value.length) % lightboxItems.value.length; };
+const nextImage = () => { lightboxIdx.value = (lightboxIdx.value + 1) % lightboxItems.value.length; };
+
+const onKeydown = (e: KeyboardEvent) => {
+  if (!lightboxOpen.value) return;
+  if (e.key === 'Escape') closeLightbox();
+  if (e.key === 'ArrowLeft') prevImage();
+  if (e.key === 'ArrowRight') nextImage();
+};
+onMounted(() => window.addEventListener('keydown', onKeydown));
+onUnmounted(() => window.removeEventListener('keydown', onKeydown));
 </script>
 
 <template>
@@ -176,6 +209,16 @@ const initials = (name: string | null) => {
 
               <p v-if="rev.comment" class="text-[#3f3f42] font-medium leading-relaxed font-sans">{{ rev.comment }}</p>
 
+              <!-- Imagen de evidencia -->
+              <div v-if="rev.imageUrl" class="mt-4">
+                <img
+                  :src="rev.imageUrl"
+                  class="w-full max-h-64 object-cover rounded-2xl cursor-pointer hover:opacity-90 hover:scale-[1.01] transition-all duration-300 shadow-md border border-black/5"
+                  @click="openLightbox(rev.id)"
+                  alt="Evidencia de la reseña"
+                />
+              </div>
+
               <div v-if="rev.managerReply" class="mt-6 relative pl-6">
                 <div class="absolute left-0 top-0 bottom-0 w-1 bg-orange-500 rounded-full"></div>
                 <div class="bg-orange-500/5 rounded-2xl p-5 border border-orange-500/10">
@@ -191,5 +234,75 @@ const initials = (name: string | null) => {
         </section>
       </div>
     </template>
+
+    <!-- Lightbox -->
+    <Teleport to="body">
+      <Transition name="lb">
+        <div
+          v-if="lightboxOpen"
+          class="fixed inset-0 z-[200] flex items-center justify-center"
+          @click.self="closeLightbox"
+        >
+          <!-- Backdrop -->
+          <div class="absolute inset-0 bg-black/80 backdrop-blur-md" @click="closeLightbox"></div>
+
+          <!-- Panel -->
+          <div class="relative z-10 w-full max-w-3xl mx-4 flex flex-col items-center gap-4">
+
+            <!-- Close -->
+            <button
+              @click="closeLightbox"
+              class="absolute -top-12 right-0 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+            >
+              <span class="material-symbols-outlined">close</span>
+            </button>
+
+            <!-- Image -->
+            <div class="relative w-full">
+              <img
+                :src="lightboxItems[lightboxIdx]?.url"
+                class="w-full max-h-[70vh] object-contain rounded-2xl shadow-2xl"
+                alt="Evidencia de reseña"
+              />
+
+              <!-- Prev -->
+              <button
+                v-if="lightboxItems.length > 1"
+                @click.stop="prevImage"
+                class="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center text-white transition-colors"
+              >
+                <span class="material-symbols-outlined">arrow_back_ios</span>
+              </button>
+
+              <!-- Next -->
+              <button
+                v-if="lightboxItems.length > 1"
+                @click.stop="nextImage"
+                class="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center text-white transition-colors"
+              >
+                <span class="material-symbols-outlined">arrow_forward_ios</span>
+              </button>
+            </div>
+
+            <!-- Comment + counter -->
+            <div class="w-full bg-white/10 backdrop-blur-sm rounded-2xl px-6 py-4 text-white">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-sm font-bold text-orange-400">{{ lightboxItems[lightboxIdx]?.author || 'Estudiante' }}</span>
+                <span v-if="lightboxItems.length > 1" class="text-xs text-white/50">{{ lightboxIdx + 1 }} / {{ lightboxItems.length }}</span>
+              </div>
+              <p v-if="lightboxItems[lightboxIdx]?.comment" class="text-sm text-white/80 leading-relaxed">
+                {{ lightboxItems[lightboxIdx].comment }}
+              </p>
+              <p v-else class="text-sm text-white/40 italic">Sin comentario adicional</p>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
+
+<style scoped>
+.lb-enter-active, .lb-leave-active { transition: opacity 0.2s ease; }
+.lb-enter-from, .lb-leave-to { opacity: 0; }
+</style>
