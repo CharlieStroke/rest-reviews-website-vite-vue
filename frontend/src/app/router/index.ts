@@ -30,7 +30,7 @@ const routes = [
         path: 'dashboard',
         name: 'dashboard',
         component: () => import('@/pages/dashboard/ui/StudentDashboard.vue'),
-        meta: { roles: ['manager', 'admin', 'student'] }
+        meta: { roles: ['student'] }
       },
       {
         path: 'manager',

@@ -48,6 +48,7 @@ const isActive = (path: string) => route.path.includes(path);
         <!-- Desktop Nav Links -->
         <div class="hidden md:flex items-center space-x-10 font-['Manrope'] tracking-tight">
           <router-link
+            v-if="authStore.user?.role === 'student'"
             to="/dashboard"
             class="transition-colors border-b-2 pb-1 text-lg font-semibold"
             :class="isActive('/dashboard') ? 'text-orange-500 font-bold border-orange-500' : 'text-[#adaaad] hover:text-white border-transparent'"
@@ -158,6 +159,7 @@ const isActive = (path: string) => route.path.includes(path);
         >
           <div class="px-4 py-4 space-y-1">
             <router-link
+              v-if="authStore.user?.role === 'student'"
               to="/dashboard"
               class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors"
               :class="isActive('/dashboard') ? 'bg-orange-500/10 text-orange-400' : 'text-[#adaaad] hover:bg-white/5 hover:text-white'"
