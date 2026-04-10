@@ -5,8 +5,8 @@ Node.js (AnalyticsService.ts) delegates to the FastAPI server (server.py).
 This module is kept for direct CLI invocation and debugging.
 
 Modes (dispatched via stdin JSON):
-  - {"mode": "train"}                              → full pipeline (retrain + IGE snapshots)
-  - {"mode": "predict", "review_id": X, "text": Y} → single-review inference, no retraining
+- {"mode": "train"}                              → full pipeline (retrain + IGE snapshots)
+- {"mode": "predict", "review_id": X, "text": Y} → single-review inference, no retraining
 
 Default (no stdin): full pipeline.
 """
