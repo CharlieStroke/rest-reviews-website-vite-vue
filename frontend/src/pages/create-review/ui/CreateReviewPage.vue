@@ -25,12 +25,13 @@ const comment = ref('');
 const loading = ref(false);
 const error = ref<string | null>(null);
 
+const COMMENT_MIN = 60;
 const COMMENT_MAX = 500;
 const commentLength = computed(() => comment.value.length);
-const commentTooShort = computed(() => comment.value.length > 0 && comment.value.length < 10);
+const commentTooShort = computed(() => commentLength.value < COMMENT_MIN);
 
 const allScoresValid = computed(() => foodScore.value > 0 && serviceScore.value > 0 && priceScore.value > 0);
-const formValid = computed(() => allScoresValid.value && !loading.value && commentLength.value <= COMMENT_MAX && !commentTooShort.value);
+const formValid = computed(() => allScoresValid.value && !loading.value && commentLength.value >= COMMENT_MIN && commentLength.value <= COMMENT_MAX);
 
 // Upload de imagen real
 interface UploadedImage {
@@ -222,8 +223,8 @@ const hoveredPrice = ref(0);
               :maxlength="COMMENT_MAX"
             ></textarea>
             <div class="flex justify-between mt-1">
-              <span v-if="commentTooShort" class="text-xs text-red-500 font-bold">Mínimo 10 caracteres si escribes un comentario</span>
-              <span v-else class="flex-1"></span>
+              <span v-if="commentTooShort" class="text-xs text-red-500 font-bold">Mínimo {{ COMMENT_MIN }} caracteres ({{ COMMENT_MIN - commentLength }} restantes)</span>
+              <span v-else class="text-xs text-green-600 font-bold">✓ Listo</span>
               <span class="text-xs text-[#adaaad] font-bold">{{ commentLength }} / {{ COMMENT_MAX }} MAX</span>
             </div>
           </div>
