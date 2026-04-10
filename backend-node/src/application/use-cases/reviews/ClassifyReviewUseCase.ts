@@ -14,9 +14,17 @@ export class ClassifyReviewUseCase {
      * Classify the sentiment of a single review immediately after it is saved.
      * This method is called fire-and-forget — it never throws to the caller.
      */
-    async execute(reviewId: string, text: string): Promise<void> {
+    async execute(
+        reviewId: string,
+        text: string,
+        foodScore?: number,
+        serviceScore?: number,
+        priceScore?: number,
+    ): Promise<void> {
         try {
-            const result = await this.analyticsService.classifyReview(reviewId, text ?? '');
+            const result = await this.analyticsService.classifyReview(
+                reviewId, text ?? '', foodScore, serviceScore, priceScore,
+            );
             if (!result.model_ready) {
                 logger.warn(
                     { reviewId },

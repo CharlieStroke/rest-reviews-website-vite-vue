@@ -4,7 +4,7 @@ from collections import Counter
 from application.use_cases.generate_snapshots import GenerateMetricsSnapshotsUseCase
 from application.use_cases.train_model import TrainModelUseCase
 from domain.interfaces import IMetricsRepository, IReviewRepository, ISentimentModel
-from domain.services import IGECalculator
+from domain.services import IGECalculator, SentimentReconciler
 
 logger = logging.getLogger(__name__)
 
@@ -56,10 +56,21 @@ class RunPipelineUseCase:
         comments = df["comment"].fillna("").tolist()
         predictions = self._model.predict(comments)
 
-        # 5. Assign review IDs to predictions
+        # 5. Assign review IDs and reconcile with star-rating scores
         review_ids = df["id"].tolist()
-        for pred, review_id in zip(predictions, review_ids):
+        for pred, review_id, food, service, price in zip(
+            predictions,
+            review_ids,
+            df["food_score"].tolist(),
+            df["service_score"].tolist(),
+            df["price_score"].tolist(),
+        ):
             pred.review_id = str(review_id)
+            final_label, final_prob = SentimentReconciler.reconcile(
+                pred.label, pred.probability, food, service, price
+            )
+            pred.label = final_label
+            pred.probability = final_prob
 
         # 6. Persist predictions in sentiment_results
         inserted = self._metrics_repo.save_predictions(predictions, version_id)

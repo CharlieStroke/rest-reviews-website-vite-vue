@@ -2,16 +2,18 @@
 PredictSingleReviewUseCase
 
 Classifies the sentiment of ONE review at submission time.
-Does NOT retrain the model — uses the cached joblib artefact.
+Does NOT retrain the model — uses the cached transformer model.
 
 Output contract (stdout → Node.js):
     {"review_id": str, "label": str, "probability": float, "model_ready": bool}
 """
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from domain.interfaces import IMetricsRepository, IModelRepository, ISentimentModel
+
+from domain.services import SentimentReconciler
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +31,14 @@ class PredictSingleReviewUseCase:
         self._model_repo = model_repo
         self._metrics_repo = metrics_repo
 
-    def execute(self, review_id: str, text: str) -> dict:
+    def execute(
+        self,
+        review_id: str,
+        text: str,
+        food_score: Optional[float] = None,
+        service_score: Optional[float] = None,
+        price_score: Optional[float] = None,
+    ) -> dict:
         """Classify *text* for *review_id* and persist the result.
 
         Returns the JSON contract dict regardless of success — never raises
@@ -58,6 +67,19 @@ class PredictSingleReviewUseCase:
         predictions = self._model.predict([text])
         pred = predictions[0]
         pred.review_id = review_id
+
+        # 2b. Reconcile: blend text confidence with explicit star-rating signals
+        final_label, final_prob = SentimentReconciler.reconcile(
+            pred.label, pred.probability,
+            food_score, service_score, price_score,
+        )
+        if final_label != pred.label:
+            logger.info(
+                "predict_single: reconciled review_id=%s %s→%s (prob %.4f→%.4f)",
+                review_id, pred.label, final_label, pred.probability, final_prob,
+            )
+        pred.label = final_label
+        pred.probability = final_prob
 
         # 3. Persist — requires a model_version_id
         version_id = self._model_repo.get_latest_model_version_id()

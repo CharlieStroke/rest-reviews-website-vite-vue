@@ -69,6 +69,9 @@ async def startup() -> None:
 class PredictRequest(BaseModel):
     review_id: str
     text: str
+    food_score: float | None = None
+    service_score: float | None = None
+    price_score: float | None = None
 
 
 class TrainRequest(BaseModel):
@@ -81,7 +84,12 @@ class TrainRequest(BaseModel):
 async def predict(req: PredictRequest) -> dict:
     from application.use_cases.predict_single_review import PredictSingleReviewUseCase
     uc = PredictSingleReviewUseCase(_deps["model"], _deps["model_repo"], _deps["metrics_repo"])
-    result = uc.execute(req.review_id, req.text)
+    result = uc.execute(
+        req.review_id, req.text,
+        food_score=req.food_score,
+        service_score=req.service_score,
+        price_score=req.price_score,
+    )
     return result
 
 

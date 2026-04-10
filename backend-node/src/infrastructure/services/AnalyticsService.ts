@@ -19,8 +19,20 @@ export class AnalyticsService implements IAnalyticsService {
      * Single-review inference — called automatically on every POST /reviews.
      * Non-blocking from the caller's perspective (fire-and-forget pattern).
      */
-    async classifyReview(reviewId: string, text: string): Promise<PredictResult> {
-        const result = await this._post('/predict', { review_id: reviewId, text });
+    async classifyReview(
+        reviewId: string,
+        text: string,
+        foodScore?: number,
+        serviceScore?: number,
+        priceScore?: number,
+    ): Promise<PredictResult> {
+        const result = await this._post('/predict', {
+            review_id: reviewId,
+            text,
+            food_score: foodScore ?? null,
+            service_score: serviceScore ?? null,
+            price_score: priceScore ?? null,
+        });
         if (result.error) {
             return {
                 review_id: reviewId,
