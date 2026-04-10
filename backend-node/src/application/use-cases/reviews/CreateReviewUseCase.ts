@@ -43,7 +43,10 @@ export class CreateReviewUseCase {
         const saved = await this.reviewRepository.save(newReview);
 
         // 5. Fire-and-forget: classify sentiment immediately, never block the HTTP response
-        this.classifyReviewUseCase.execute(saved.id!, dto.comment ?? '');
+        this.classifyReviewUseCase.execute(
+            saved.id!, dto.comment ?? '',
+            dto.foodScore, dto.serviceScore, dto.priceScore,
+        );
 
         return saved;
     }

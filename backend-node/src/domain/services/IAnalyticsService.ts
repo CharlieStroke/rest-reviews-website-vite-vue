@@ -18,5 +18,11 @@ export interface IAnalyticsService {
     runSentimentAnalysis(): Promise<AnalyticsResult>;
 
     /** Single-review inference: classify one review immediately at submission time. */
-    classifyReview(reviewId: string, text: string): Promise<PredictResult>;
+    classifyReview(
+        reviewId: string,
+        text: string,
+        foodScore?: number,
+        serviceScore?: number,
+        priceScore?: number,
+    ): Promise<PredictResult>;
 }
