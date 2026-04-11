@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { useAuthStore } from '@/entities/user/model/authStore';
 
 const CARRERAS = [
@@ -30,6 +30,7 @@ const props = defineProps<{
   initialName?: string;
   initialBio?: string;
   initialCarrera?: string | null;
+  initialAvatarUrl?: string | null;
 }>();
 
 const emit = defineEmits(['close', 'saved']);
@@ -39,8 +40,50 @@ const authStore = useAuthStore();
 const name = ref(props.initialName || '');
 const bio = ref(props.initialBio || '');
 const carrera = ref(props.initialCarrera || '');
+const avatarUrl = ref(props.initialAvatarUrl || '');
+const avatarUploading = ref(false);
+const avatarError = ref<string | null>(null);
+const avatarFileInput = ref<HTMLInputElement | null>(null);
 const saving = ref(false);
 const saveError = ref<string | null>(null);
+
+const avatarPreview = computed(() => avatarUrl.value || null);
+
+const userInitials = computed(() => {
+  const parts = name.value.trim().split(' ');
+  if (parts.length >= 2 && parts[0] && parts[1]) return (parts[0][0]! + parts[1][0]!).toUpperCase();
+  return name.value.substring(0, 2).toUpperCase();
+});
+
+async function onAvatarSelect(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0];
+  if (!file) return;
+  (e.target as HTMLInputElement).value = '';
+
+  avatarUploading.value = true;
+  avatarError.value = null;
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    const token = localStorage.getItem('token');
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    const res = await fetch(`${baseUrl}/api/upload`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => ({})) as any;
+      throw new Error(errBody?.message || `HTTP ${res.status}`);
+    }
+    const json = await res.json() as { success: boolean; data: { url: string } };
+    avatarUrl.value = json.data.url;
+  } catch (err) {
+    avatarError.value = (err as Error).message || 'No se pudo subir la imagen.';
+  } finally {
+    avatarUploading.value = false;
+  }
+}
 
 // Sync form values when modal opens with fresh data from parent
 watch(() => props.isOpen, (open) => {
@@ -48,6 +91,8 @@ watch(() => props.isOpen, (open) => {
     name.value = props.initialName || '';
     bio.value = props.initialBio || '';
     carrera.value = props.initialCarrera || '';
+    avatarUrl.value = props.initialAvatarUrl || '';
+    avatarError.value = null;
     saveError.value = null;
   }
 });
@@ -65,6 +110,7 @@ const handleSave = async () => {
       name: name.value.trim(),
       bio: bio.value.trim() || null,
       carrera: carrera.value || null,
+      avatarUrl: avatarUrl.value || null,
     });
     emit('saved');
     emit('close');
@@ -90,6 +136,44 @@ const handleSave = async () => {
       </div>
 
       <div class="flex flex-col gap-6">
+
+        <!-- Avatar upload -->
+        <div class="flex flex-col gap-2">
+          <label class="text-xs font-semibold text-on-surface-variant uppercase tracking-widest">Foto de Perfil</label>
+          <div class="flex items-center gap-5">
+            <!-- Preview -->
+            <div class="w-20 h-20 rounded-2xl overflow-hidden bg-surface-variant flex items-center justify-center shrink-0 border border-outline-variant/20 shadow-inner relative">
+              <img v-if="avatarPreview" :src="avatarPreview" class="w-full h-full object-cover" alt="Avatar" />
+              <span v-else class="text-2xl font-black text-primary">{{ userInitials }}</span>
+              <div v-if="avatarUploading" class="absolute inset-0 bg-black/50 flex items-center justify-center">
+                <span class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+              </div>
+            </div>
+            <!-- Buttons -->
+            <div class="flex flex-col gap-2">
+              <input ref="avatarFileInput" type="file" accept="image/*" class="hidden" @change="onAvatarSelect" />
+              <button
+                type="button"
+                @click="avatarFileInput?.click()"
+                :disabled="avatarUploading"
+                class="px-4 py-2 text-sm font-semibold rounded-xl border border-outline-variant/30 text-on-surface hover:bg-surface-variant transition-colors disabled:opacity-50"
+              >
+                {{ avatarPreview ? 'Cambiar foto' : 'Subir foto' }}
+              </button>
+              <button
+                v-if="avatarPreview"
+                type="button"
+                @click="avatarUrl = ''"
+                :disabled="avatarUploading"
+                class="px-4 py-2 text-sm font-semibold rounded-xl text-red-500 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+              >
+                Eliminar foto
+              </button>
+            </div>
+          </div>
+          <p v-if="avatarError" class="text-xs text-red-500 font-semibold">{{ avatarError }}</p>
+        </div>
+
         <div class="flex flex-col gap-2">
           <label class="text-xs font-semibold text-on-surface-variant uppercase tracking-widest">Nombre</label>
           <input
