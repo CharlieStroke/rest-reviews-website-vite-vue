@@ -7,6 +7,7 @@ export interface IReviewRepository {
     findByUserId(userId: string): Promise<Review[]>;
     save(review: Review): Promise<Review>;
     update(review: Review): Promise<Review>;
+    delete(id: string): Promise<void>;
 
     /**
      * PRD Requirement: Verify if a user has already reviewed an establishment

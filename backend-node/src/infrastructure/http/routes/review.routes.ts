@@ -40,6 +40,7 @@ reviewRouter.get('/my', authenticateToken, reviewController.getMyReviews);
  */
 reviewRouter.post('/', authenticateToken, requireRole(['student']), reviewRateLimiter, reviewController.create);
 reviewRouter.patch('/:id', authenticateToken, requireRole(['student']), reviewController.updateUserReview);
+reviewRouter.delete('/:id', authenticateToken, requireRole(['student']), reviewController.deleteUserReview);
 reviewRouter.patch('/:id/reply', authenticateToken, requireRole(['admin', 'manager']), reviewController.reply);
 
 export default reviewRouter;

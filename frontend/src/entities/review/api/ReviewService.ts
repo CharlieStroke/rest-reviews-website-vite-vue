@@ -28,6 +28,10 @@ export class ReviewService {
     await httpClient.patch(`/api/reviews/${id}`, request);
   }
 
+  static async deleteReview(id: string): Promise<void> {
+    await httpClient.delete(`/api/reviews/${id}`);
+  }
+
   static async getMyReviews(): Promise<MyReview[]> {
     const response = await httpClient.get<{ success: boolean; data: MyReview[] }>('/api/reviews/my');
     return response.data.data;
