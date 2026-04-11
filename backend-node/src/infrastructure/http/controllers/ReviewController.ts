@@ -105,6 +105,8 @@ export class ReviewController {
         const formatted = data.map(r => ({
             id: r.id,
             author: r.authorName,
+            authorCarrera: r.authorCarrera ?? null,
+            title: r.title ?? null,
             comment: r.comment,
             foodScore: r.foodScore,
             serviceScore: r.serviceScore,

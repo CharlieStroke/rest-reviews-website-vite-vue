@@ -21,10 +21,17 @@ onMounted(async () => {
 const foodScore = ref(0);
 const serviceScore = ref(0);
 const priceScore = ref(0);
+const title = ref('');
 const comment = ref('');
+const agreedToDisclaimer = ref(false);
 const loading = ref(false);
 const error = ref<string | null>(null);
 const showTips = ref(false);
+
+const TITLE_MIN = 5;
+const TITLE_MAX = 100;
+const titleLength = computed(() => title.value.length);
+const titleValid = computed(() => titleLength.value >= TITLE_MIN && titleLength.value <= TITLE_MAX);
 
 const COMMENT_MIN = 60;
 const COMMENT_MAX = 500;
@@ -32,13 +39,14 @@ const commentLength = computed(() => comment.value.length);
 const commentTooShort = computed(() => commentLength.value < COMMENT_MIN);
 
 const allScoresValid = computed(() => foodScore.value > 0 && serviceScore.value > 0 && priceScore.value > 0);
-const formValid = computed(() => allScoresValid.value && !loading.value && commentLength.value >= COMMENT_MIN && commentLength.value <= COMMENT_MAX);
+const formValid = computed(() => allScoresValid.value && !loading.value && commentLength.value >= COMMENT_MIN && commentLength.value <= COMMENT_MAX && titleValid.value && agreedToDisclaimer.value);
 
 // Upload de imagen real
 interface UploadedImage {
   previewUrl: string;   // blob URL local para el preview
   remoteUrl: string | null; // URL de Supabase (null mientras sube)
   uploading: boolean;
+  errorMessage: string | null;
   file: File;
 }
 
@@ -66,8 +74,11 @@ const onFileSelect = async (e: any) => {
     previewUrl: URL.createObjectURL(file),
     remoteUrl: null,
     uploading: true,
+    errorMessage: null,
     file,
   });
+
+  const entry = uploadedImages.value[idx]!;
 
   try {
     const formData = new FormData();
@@ -84,12 +95,13 @@ const onFileSelect = async (e: any) => {
       throw new Error(errBody?.message || `HTTP ${res.status}`);
     }
     const json = await res.json() as { success: boolean; data: { url: string } };
-    uploadedImages.value[idx].remoteUrl = json.data.url;
+    entry.remoteUrl = json.data.url;
   } catch (err) {
     console.error('[Upload]', err);
-    uploadedImages.value[idx].remoteUrl = null;
+    entry.remoteUrl = null;
+    entry.errorMessage = (err as Error).message || 'No se pudo subir la imagen.';
   } finally {
-    uploadedImages.value[idx].uploading = false;
+    entry.uploading = false;
   }
 };
 
@@ -116,6 +128,7 @@ const submitReview = async () => {
       foodScore: foodScore.value,
       serviceScore: serviceScore.value,
       priceScore: priceScore.value,
+      title: title.value || undefined,
       comment: comment.value || undefined,
       imageUrl,
     });
@@ -213,6 +226,24 @@ const hoveredPrice = ref(0);
             </div>
           </div>
 
+          <!-- Title -->
+          <div>
+            <label class="font-bold text-[#0e0e10] brand block mb-2">Título de tu opinión <span class="text-red-500">*</span></label>
+            <input
+              v-model="title"
+              type="text"
+              :maxlength="TITLE_MAX"
+              placeholder="Ej: Excelente atención y sabor único"
+              class="w-full bg-white rounded-xl border border-black/10 px-5 py-4 text-[#0e0e10] focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 transition-all shadow-sm"
+            />
+            <div class="flex justify-between mt-1">
+              <span v-if="title.length > 0 && !titleValid" class="text-xs text-red-500 font-bold">Mínimo {{ TITLE_MIN }} caracteres</span>
+              <span v-else-if="titleValid" class="text-xs text-green-600 font-bold">✓ Listo</span>
+              <span v-else class="text-xs text-[#adaaad]">Escribe un título breve</span>
+              <span class="text-xs text-[#adaaad] font-bold">{{ titleLength }} / {{ TITLE_MAX }}</span>
+            </div>
+          </div>
+
           <!-- Text Review -->
           <div>
             <div class="flex items-center justify-between mb-2">
@@ -281,30 +312,45 @@ const hoveredPrice = ref(0);
 
             <!-- Previews con estado de upload -->
             <div v-if="uploadedImages.length > 0" class="flex gap-4 mt-4 overflow-x-auto pb-2">
-              <div v-for="(img, i) in uploadedImages" :key="i" class="w-28 h-28 rounded-xl overflow-hidden relative shadow-md shrink-0 border border-black/10 bg-black/5">
-                <img :src="img.previewUrl" class="w-full h-full object-cover" />
-                <!-- Overlay: subiendo -->
-                <div v-if="img.uploading" class="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-1">
-                  <span class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                  <span class="text-white text-[10px] font-bold">Subiendo…</span>
+              <div v-for="(img, i) in uploadedImages" :key="i" class="shrink-0 flex flex-col gap-1.5">
+                <div class="w-28 h-28 rounded-xl overflow-hidden relative shadow-md border border-black/10 bg-black/5">
+                  <img :src="img.previewUrl" class="w-full h-full object-cover" />
+                  <!-- Overlay: subiendo -->
+                  <div v-if="img.uploading" class="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-1">
+                    <span class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    <span class="text-white text-[10px] font-bold">Subiendo…</span>
+                  </div>
+                  <!-- Overlay: error -->
+                  <div v-else-if="!img.remoteUrl" class="absolute inset-0 bg-red-500/70 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-white text-2xl">block</span>
+                  </div>
+                  <!-- Check: subido OK -->
+                  <div v-else class="absolute top-1 left-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center shadow">
+                    <span class="material-symbols-outlined text-white text-xs" style="font-size:12px">check</span>
+                  </div>
+                  <button @click.prevent="removeImage(i)" class="absolute top-1 right-1 w-6 h-6 bg-black/60 hover:bg-red-500 rounded-full text-white flex items-center justify-center shadow-lg transition-colors">
+                    <span class="material-symbols-outlined text-sm">close</span>
+                  </button>
                 </div>
-                <!-- Overlay: error -->
-                <div v-else-if="!img.remoteUrl" class="absolute inset-0 bg-red-500/70 flex flex-col items-center justify-center gap-1">
-                  <span class="material-symbols-outlined text-white text-lg">error</span>
-                  <span class="text-white text-[10px] font-bold">Error</span>
-                </div>
-                <!-- Check: subido OK -->
-                <div v-else class="absolute top-1 left-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center shadow">
-                  <span class="material-symbols-outlined text-white text-xs" style="font-size:12px">check</span>
-                </div>
-                <button @click.prevent="removeImage(i)" class="absolute top-1 right-1 w-6 h-6 bg-black/60 hover:bg-red-500 rounded-full text-white flex items-center justify-center shadow-lg transition-colors">
-                  <span class="material-symbols-outlined text-sm">close</span>
-                </button>
+                <!-- Mensaje de error bajo el thumbnail -->
+                <p v-if="img.errorMessage" class="w-28 text-[10px] text-red-600 font-bold leading-tight text-center">{{ img.errorMessage }}</p>
               </div>
               <!-- Aviso de imagen pendiente -->
               <p v-if="uploadedImages.some(img => img.uploading)" class="text-xs text-[#525155] self-end pb-2">Espera a que termine la subida antes de publicar</p>
             </div>
           </div>
+
+          <!-- Disclaimer checkbox -->
+          <label class="flex items-start gap-3 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              v-model="agreedToDisclaimer"
+              class="mt-1 w-5 h-5 rounded border-black/20 text-orange-500 accent-orange-500 shrink-0 cursor-pointer"
+            />
+            <span class="text-sm text-[#525155] leading-snug">
+              Confirmo que esta reseña refleja mi experiencia personal y honesta. Entiendo que las reseñas falsas o malintencionadas pueden ser eliminadas.
+            </span>
+          </label>
 
           <div v-if="error" class="p-4 bg-red-50 text-red-600 rounded-xl text-sm font-bold text-center border border-red-200">
             {{ error }}
