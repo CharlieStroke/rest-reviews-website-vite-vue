@@ -6,6 +6,8 @@ import { ListReviewsUseCase } from '../../../application/use-cases/reviews/ListR
 import { ListUserReviewsUseCase } from '../../../application/use-cases/reviews/ListUserReviewsUseCase';
 import { ReplyToReviewUseCase } from '../../../application/use-cases/reviews/ReplyToReviewUseCase';
 import { UpdateReviewUseCase } from '../../../application/use-cases/reviews/UpdateReviewUseCase';
+import { DeleteReviewUseCase } from '../../../application/use-cases/reviews/DeleteReviewUseCase';
+import { ClassifyReviewUseCase } from '../../../application/use-cases/reviews/ClassifyReviewUseCase';
 import { CreateReviewSchema, ReplyReviewSchema, UpdateReviewSchema } from '../../../application/dtos/ReviewDTO';
 import { AuthRequest } from '../middlewares/AuthMiddleware';
 
@@ -19,7 +21,9 @@ export class ReviewController {
         @inject(ListReviewsUseCase) private listReviewsUseCase: ListReviewsUseCase,
         @inject(ListUserReviewsUseCase) private listUserReviewsUseCase: ListUserReviewsUseCase,
         @inject(ReplyToReviewUseCase) private replyToReviewUseCase: ReplyToReviewUseCase,
-        @inject(UpdateReviewUseCase) private updateReviewUseCase: UpdateReviewUseCase
+        @inject(UpdateReviewUseCase) private updateReviewUseCase: UpdateReviewUseCase,
+        @inject(DeleteReviewUseCase) private deleteReviewUseCase: DeleteReviewUseCase,
+        @inject(ClassifyReviewUseCase) private classifyReviewUseCase: ClassifyReviewUseCase,
     ) { }
 
     /**
@@ -253,6 +257,13 @@ export class ReviewController {
         const { id } = req.params;
         const dto = UpdateReviewSchema.parse(req.body);
         const review = await this.updateReviewUseCase.execute(id, userId, dto);
+
+        // Fire-and-forget: re-classify sentiment with the updated text
+        const text = [(review.title ?? ''), (review.comment ?? '')].filter(Boolean).join('. ');
+        this.classifyReviewUseCase.execute(
+            review.id!, text, review.foodScore, review.serviceScore, review.priceScore,
+        );
+
         res.status(200).json({
             success: true,
             data: {
@@ -265,5 +276,16 @@ export class ReviewController {
                 updatedAt: review.updatedAt,
             }
         });
+    };
+
+    public deleteUserReview = async (req: AuthRequest, res: Response): Promise<void> => {
+        const userId = req.user?.userId;
+        if (!userId) {
+            res.status(401).json({ success: false, message: 'Unauthorized' });
+            return;
+        }
+        const { id } = req.params;
+        await this.deleteReviewUseCase.execute(id, userId);
+        res.status(200).json({ success: true, message: 'Reseña eliminada correctamente' });
     };
 }

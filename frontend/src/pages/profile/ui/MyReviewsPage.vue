@@ -7,6 +7,50 @@ const reviews = ref<MyReview[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
 
+// ── Delete state ─────────────────────────────────────────────────────────────
+const deletingId = ref<string | null>(null);
+const confirmDeleteId = ref<string | null>(null);
+
+async function deleteReview(id: string) {
+  deletingId.value = id;
+  try {
+    await ReviewService.deleteReview(id);
+    reviews.value = reviews.value.filter(r => r.id !== id);
+    // Reset to last valid page if needed
+    if (currentPage.value > totalPages.value && totalPages.value > 0) {
+      currentPage.value = totalPages.value;
+    }
+  } finally {
+    deletingId.value = null;
+    confirmDeleteId.value = null;
+  }
+}
+
+// ── Manager reply notifications (localStorage) ────────────────────────────────
+const SEEN_KEY = 'seen_manager_replies';
+
+function getSeenReplies(): Record<string, boolean> {
+  try { return JSON.parse(localStorage.getItem(SEEN_KEY) || '{}'); } catch { return {}; }
+}
+
+function isReplyNew(rev: MyReview): boolean {
+  if (!rev.managerReply) return false;
+  return !getSeenReplies()[rev.id];
+}
+
+function markRepliesSeen() {
+  const seen = getSeenReplies();
+  for (const r of reviews.value) {
+    if (r.managerReply) seen[r.id] = true;
+  }
+  localStorage.setItem(SEEN_KEY, JSON.stringify(seen));
+}
+
+// Mark after a brief delay so the badge is visible first
+function scheduleMarkSeen() {
+  setTimeout(markRepliesSeen, 3000);
+}
+
 // ── Edit state ───────────────────────────────────────────────────────────────
 const editingId = ref<string | null>(null);
 const editForm = ref({ foodScore: 0, serviceScore: 0, priceScore: 0, title: '', comment: '' });
@@ -74,6 +118,7 @@ const paginatedReviews = computed(() => {
 onMounted(async () => {
   try {
     reviews.value = await ReviewService.getMyReviews();
+    scheduleMarkSeen();
   } catch (e: any) {
     error.value = e.response?.data?.message || 'No se pudieron cargar tus reseñas.';
   } finally {
@@ -169,15 +214,39 @@ const formatDate = (iso: string) =>
                   <span class="text-[9px] uppercase text-white/50 font-semibold tracking-wider">Precio</span>
                 </div>
               </div>
-              <!-- Edit button -->
-              <button
-                v-if="editingId !== rev.id"
-                @click="startEdit(rev)"
-                class="w-9 h-9 rounded-xl bg-white/5 hover:bg-orange-500/20 border border-white/10 hover:border-orange-500/30 text-white/50 hover:text-orange-400 flex items-center justify-center transition-colors"
-                title="Editar reseña"
-              >
-                <span class="material-symbols-outlined text-base">edit</span>
-              </button>
+              <!-- Edit / Delete buttons -->
+              <template v-if="editingId !== rev.id">
+                <button
+                  @click="startEdit(rev)"
+                  class="w-9 h-9 rounded-xl bg-white/5 hover:bg-orange-500/20 border border-white/10 hover:border-orange-500/30 text-white/50 hover:text-orange-400 flex items-center justify-center transition-colors"
+                  title="Editar reseña"
+                >
+                  <span class="material-symbols-outlined text-base">edit</span>
+                </button>
+                <button
+                  v-if="confirmDeleteId !== rev.id"
+                  @click="confirmDeleteId = rev.id"
+                  class="w-9 h-9 rounded-xl bg-white/5 hover:bg-red-500/20 border border-white/10 hover:border-red-500/30 text-white/50 hover:text-red-400 flex items-center justify-center transition-colors"
+                  title="Eliminar reseña"
+                >
+                  <span class="material-symbols-outlined text-base">delete</span>
+                </button>
+                <!-- Confirm delete inline -->
+                <div v-else class="flex items-center gap-2">
+                  <span class="text-xs text-white/50">¿Eliminar?</span>
+                  <button
+                    @click="deleteReview(rev.id)"
+                    :disabled="deletingId === rev.id"
+                    class="px-3 py-1.5 text-xs font-bold rounded-lg bg-red-500 hover:bg-red-400 text-white transition-colors disabled:opacity-50 flex items-center gap-1"
+                  >
+                    <span v-if="deletingId === rev.id" class="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    {{ deletingId === rev.id ? '…' : 'Sí' }}
+                  </button>
+                  <button @click="confirmDeleteId = null" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white/10 hover:bg-white/20 text-white/60 transition-colors">
+                    No
+                  </button>
+                </div>
+              </template>
             </div>
           </div>
 
@@ -265,6 +334,9 @@ const formatDate = (iso: string) =>
               <div class="flex items-center gap-2 mb-2">
                 <span class="material-symbols-outlined text-orange-500 text-base">reply</span>
                 <span class="text-xs font-extrabold text-orange-500 uppercase tracking-wider">Respuesta del Gerente</span>
+                <span v-if="isReplyNew(rev)" class="ml-1 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest bg-orange-500 text-white rounded-full animate-pulse">
+                  Nueva
+                </span>
               </div>
               <p class="text-sm text-[#333] leading-relaxed ml-7">{{ rev.managerReply }}</p>
             </div>
