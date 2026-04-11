@@ -36,6 +36,7 @@ export class CreateReviewUseCase {
             foodScore: dto.foodScore,
             serviceScore: dto.serviceScore,
             priceScore: dto.priceScore,
+            title: dto.title,
             comment: dto.comment,
             imageUrl: dto.imageUrl,
         });

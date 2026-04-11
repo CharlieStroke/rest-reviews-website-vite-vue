@@ -4,6 +4,7 @@ export interface Review {
   foodScore: number;
   serviceScore: number;
   priceScore: number;
+  title?: string | null;
   comment?: string | null;
   imageUrl?: string | null;
   sentiment?: string | null;
@@ -18,6 +19,7 @@ export interface MyReview extends Review {
 
 export interface EstablishmentReview extends Review {
   author: string | null;
+  authorCarrera?: string | null;
 }
 
 export interface CreateReviewRequest {
@@ -25,6 +27,7 @@ export interface CreateReviewRequest {
   foodScore: number;
   serviceScore: number;
   priceScore: number;
+  title?: string;
   comment?: string;
   imageUrl?: string;
 }

@@ -3,6 +3,7 @@ import { IReviewRepository } from '../../domain/repositories/IReviewRepository';
 import { Review } from '../../domain/entities/Review';
 import { injectable } from 'tsyringe';
 
+
 @injectable()
 export class PrismaReviewRepository implements IReviewRepository {
     async findById(id: string): Promise<Review | null> {
@@ -20,7 +21,7 @@ export class PrismaReviewRepository implements IReviewRepository {
         const [data, total] = await Promise.all([
             prisma.review.findMany({
                 include: {
-                    user: { select: { name: true } },
+                    user: { select: { name: true, carrera: true } },
                     establishment: { select: { name: true } },
                     sentimentResults: {
                         orderBy: { createdAt: 'desc' },
@@ -52,7 +53,7 @@ export class PrismaReviewRepository implements IReviewRepository {
             prisma.review.findMany({
                 where: { establishmentId },
                 include: {
-                    user: { select: { name: true } },
+                    user: { select: { name: true, carrera: true } },
                     sentimentResults: {
                         orderBy: { createdAt: 'desc' },
                         take: 1,
@@ -97,6 +98,7 @@ export class PrismaReviewRepository implements IReviewRepository {
                 foodScore: review.foodScore,
                 serviceScore: review.serviceScore,
                 priceScore: review.priceScore,
+                title: review.title,
                 comment: review.comment,
                 imageUrl: review.imageUrl,
                 createdAt: review.createdAt,
@@ -136,9 +138,11 @@ export class PrismaReviewRepository implements IReviewRepository {
             foodScore: data.foodScore,
             serviceScore: data.serviceScore,
             priceScore: data.priceScore,
+            title: data.title,
             comment: data.comment,
             imageUrl: data.imageUrl,
             authorName: data.user?.name,
+            authorCarrera: data.user?.carrera,
             establishmentName: data.establishment?.name,
             sentiment: data.sentimentResults?.[0]?.predictedLabel,
             managerReply: data.managerReply,

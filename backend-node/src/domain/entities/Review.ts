@@ -5,9 +5,11 @@ export interface ReviewProps {
     foodScore: number;
     serviceScore: number;
     priceScore: number;
+    title?: string;
     comment?: string;
     imageUrl?: string;
     authorName?: string;
+    authorCarrera?: string;
     establishmentName?: string;
     sentiment?: string;
     managerReply?: string;
@@ -52,9 +54,11 @@ export class Review {
     get foodScore(): number { return this.props.foodScore; }
     get serviceScore(): number { return this.props.serviceScore; }
     get priceScore(): number { return this.props.priceScore; }
+    get title(): string | undefined { return this.props.title; }
     get comment(): string | undefined { return this.props.comment; }
     get imageUrl(): string | undefined { return this.props.imageUrl; }
     get authorName(): string | undefined { return this.props.authorName; }
+    get authorCarrera(): string | undefined { return this.props.authorCarrera; }
     get establishmentName(): string | undefined { return this.props.establishmentName; }
     get sentiment(): string | undefined { return this.props.sentiment; }
     get managerReply(): string | undefined { return this.props.managerReply; }
