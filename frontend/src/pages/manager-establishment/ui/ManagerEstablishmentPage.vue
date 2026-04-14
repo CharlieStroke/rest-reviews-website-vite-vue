@@ -366,58 +366,73 @@ const sentimentLabel = (s: string | null) => {
         </div>
 
         <div v-else class="space-y-5">
-          <div
+          <article
             v-for="review in paginatedReviews"
             :key="review.id"
-            class="card-cream rounded-[1.5rem] p-6 shadow-sm border border-black/5"
+            class="card-cream rounded-[1.5rem] shadow-sm border border-black/5 overflow-hidden"
           >
-            <div class="flex justify-between items-start flex-col sm:flex-row gap-4 mb-4">
-              <div class="flex items-center gap-4">
-                <div class="w-10 h-10 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold flex-shrink-0">
-                  {{ (review.author ?? '?').charAt(0).toUpperCase() }}
+            <div class="p-6 pb-4">
+              <!-- Header -->
+              <div class="flex justify-between items-start mb-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-11 h-11 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-sm">
+                    {{ (review.author ?? '?').charAt(0).toUpperCase() }}
+                  </div>
+                  <div>
+                    <p class="font-bold text-[#0e0e10] brand leading-none">{{ review.author ?? 'Estudiante' }}</p>
+                    <p class="text-xs text-[#adaaad] mt-0.5">{{ formatDate(review.createdAt) }}</p>
+                  </div>
                 </div>
-                <div>
-                  <p class="font-bold text-[#0e0e10] brand">{{ review.author ?? 'Estudiante' }}</p>
-                  <p class="text-xs text-[#adaaad]">{{ formatDate(review.createdAt) }}</p>
+                <div class="flex items-center gap-2 flex-shrink-0">
+                  <span :class="['px-2 py-0.5 rounded-full text-xs font-bold', sentimentBadge((review as any).sentiment)]">
+                    {{ sentimentLabel((review as any).sentiment) }}
+                  </span>
+                  <div class="flex gap-0.5 text-orange-500">
+                    <span v-for="n in 5" :key="n" class="material-symbols-outlined text-sm" :style="{ fontVariationSettings: `'FILL' ${n <= review.foodScore ? 1 : 0}` }">star</span>
+                  </div>
                 </div>
               </div>
-              <div class="flex items-center gap-2 flex-wrap">
-                <span :class="['px-2 py-0.5 rounded-full text-xs font-bold', sentimentBadge((review as any).sentiment)]">
-                  {{ sentimentLabel((review as any).sentiment) }}
+
+              <!-- Score chips -->
+              <div class="flex gap-2 flex-wrap mb-4">
+                <span class="flex items-center gap-1.5 px-3 py-1 bg-orange-50 border border-orange-100 rounded-full text-xs font-bold text-orange-700">
+                  <span class="material-symbols-outlined text-orange-500" style="font-size:13px;font-variation-settings:'FILL' 1;">restaurant</span>
+                  Comida {{ review.foodScore }}/5
                 </span>
-                <div class="flex items-center gap-1 bg-white px-3 py-1 rounded-full shadow-sm border border-black/5">
-                  <span class="material-symbols-outlined text-orange-500 text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
-                  <span class="font-bold text-[#0e0e10] text-sm">{{ avgRating(review) }}</span>
+                <span class="flex items-center gap-1.5 px-3 py-1 bg-blue-50 border border-blue-100 rounded-full text-xs font-bold text-blue-700">
+                  <span class="material-symbols-outlined text-blue-400" style="font-size:13px;font-variation-settings:'FILL' 1;">support_agent</span>
+                  Servicio {{ review.serviceScore }}/5
+                </span>
+                <span class="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 border border-emerald-100 rounded-full text-xs font-bold text-emerald-700">
+                  <span class="material-symbols-outlined text-emerald-500" style="font-size:13px;font-variation-settings:'FILL' 1;">payments</span>
+                  Precio {{ review.priceScore }}/5
+                </span>
+              </div>
+
+              <p class="text-[#3f3f42]">{{ review.comment }}</p>
+
+              <div v-if="(review as any).managerReply" class="mt-5 relative pl-5">
+                <div class="absolute left-0 top-0 bottom-0 w-1 bg-orange-500 rounded-full"></div>
+                <div class="bg-orange-500/5 rounded-2xl p-4 border border-orange-500/10">
+                  <div class="flex items-center gap-2 mb-1.5">
+                    <span class="material-symbols-outlined text-orange-500 text-sm">reply</span>
+                    <span class="text-xs font-bold uppercase tracking-wider text-orange-500 brand">Respuesta Oficial</span>
+                  </div>
+                  <p class="text-[#3f3f42] text-sm italic leading-relaxed">"{{ (review as any).managerReply }}"</p>
                 </div>
               </div>
-            </div>
 
-            <div class="flex gap-4 mb-3 flex-wrap">
-              <span class="text-xs text-[#adaaad]">Comida: <strong class="text-[#0e0e10]">{{ review.foodScore }}/5</strong></span>
-              <span class="text-xs text-[#adaaad]">Servicio: <strong class="text-[#0e0e10]">{{ review.serviceScore }}/5</strong></span>
-              <span class="text-xs text-[#adaaad]">Precio: <strong class="text-[#0e0e10]">{{ review.priceScore }}/5</strong></span>
-            </div>
-
-            <p class="text-[#3f3f42] mb-4">"{{ review.comment }}"</p>
-
-            <div v-if="(review as any).managerReply" class="mt-3 p-4 bg-orange-50 rounded-xl border border-orange-100">
-              <div class="flex items-center gap-2 mb-2">
-                <span class="material-symbols-outlined text-orange-500 text-sm" style="font-variation-settings: 'FILL' 1;">storefront</span>
-                <span class="text-xs font-bold text-orange-600 uppercase tracking-wide">Respuesta del establecimiento</span>
+              <div v-else class="flex justify-end mt-4">
+                <button
+                  @click="openReplyModal(review)"
+                  class="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold py-2 px-6 rounded-xl hover:brightness-110 active:scale-95 transition-all shadow-md text-sm"
+                >
+                  <span class="material-symbols-outlined text-sm">reply</span>
+                  Responder
+                </button>
               </div>
-              <p class="text-sm text-[#3f3f42]">{{ (review as any).managerReply }}</p>
             </div>
-
-            <div v-else class="flex justify-end mt-2">
-              <button
-                @click="openReplyModal(review)"
-                class="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold py-2 px-6 rounded-lg hover:brightness-110 active:scale-95 transition-all shadow-md text-sm"
-              >
-                <span class="material-symbols-outlined text-sm">reply</span>
-                Responder
-              </button>
-            </div>
-          </div>
+          </article>
 
           <!-- Paginación reseñas -->
           <div v-if="Math.ceil(filteredReviews.length / REVIEW_PAGE_SIZE) > 1" class="flex items-center justify-between pt-4">
