@@ -60,13 +60,13 @@ const navigateToEstablishment = (slug: string) => {
     <!-- Welcome Banner -->
     <section class="relative w-full h-[520px] md:h-[600px] flex items-center overflow-hidden mb-12">
         <!-- Creamy Background Layer -->
-        <div class="absolute inset-0 bg-[#FAF9F6]"></div>
+        <div class="absolute inset-0 bg-[#f1ebd6]"></div>
 
         <!-- Atmospheric Imagery — más ancha, menos degradado -->
         <div class="absolute right-0 top-0 w-3/5 h-full">
             <div class="relative w-full h-full">
                 <img class="w-full h-full object-cover" src="/assets/images/ANAHUAC-1-1160x700.jpg" alt="Campus Anáhuac Oaxaca"/>
-                <div class="absolute inset-0 bg-gradient-to-r from-[#FAF9F6] via-[#FAF9F6]/30 to-transparent"></div>
+                <div class="absolute inset-0 bg-gradient-to-r from-[#f1ebd6] via-[#FAF9F6]/30 to-transparent"></div>
             </div>
         </div>
 
@@ -96,8 +96,8 @@ const navigateToEstablishment = (slug: string) => {
                 <p class="text-[#adaaad]">Establecimientos mejor calificados para nuestros Leones.</p>
             </div>
             <div class="flex space-x-2">
-                <button class="p-2 w-10 h-10 rounded-full border border-[#48474a]/40 hover:bg-surface-variant transition-colors flex items-center justify-center text-[#adaaad] hover:text-white">
-                    <span class="material-symbols-outlined">tune</span>
+                <button aria-label="Filtros" class="p-2 w-10 h-10 rounded-full border border-[#48474a]/40 hover:bg-surface-variant transition-colors flex items-center justify-center text-[#adaaad] hover:text-white">
+                    <span class="material-symbols-outlined" aria-hidden="true">tune</span>
                 </button>
             </div>
         </div>
@@ -127,6 +127,8 @@ const navigateToEstablishment = (slug: string) => {
                         <img
                             class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                             :src="est.img"
+                            :alt="est.name"
+                            loading="lazy"
                         />
                     </div>
                     <div class="p-6">
