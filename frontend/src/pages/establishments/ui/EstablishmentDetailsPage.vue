@@ -330,24 +330,43 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
             </div>
 
             <div v-else class="space-y-6">
-              <article v-for="rev in reviews" :key="rev.id" class="card-cream p-8 rounded-[2rem] shadow-xl text-[#3f3f42]">
-                <div class="flex justify-between items-start mb-6">
-                  <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold font-headline shadow-sm">
-                      {{ initials(rev.author) }}
+              <article v-for="rev in reviews" :key="rev.id" class="card-cream rounded-[2rem] shadow-xl overflow-hidden">
+                <div class="p-6 pb-4">
+                  <!-- Header -->
+                  <div class="flex justify-between items-start mb-4">
+                    <div class="flex items-center gap-3">
+                      <div class="w-11 h-11 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-sm">
+                        {{ initials(rev.author) }}
+                      </div>
+                      <div>
+                        <h4 class="font-bold text-[#0e0e10] leading-none brand">{{ rev.author || 'Estudiante' }}</h4>
+                        <p class="text-xs text-orange-500 font-semibold mt-0.5" v-if="rev.authorCarrera">{{ rev.authorCarrera }} · UAO</p>
+                        <p class="text-xs text-[#adaaad] mt-0.5">{{ new Date(rev.createdAt).toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric' }) }}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 class="font-bold text-[#0e0e10] text-lg leading-none brand">{{ rev.author || 'Estudiante' }}</h4>
-                      <p class="text-xs text-orange-500 font-semibold mt-0.5" v-if="rev.authorCarrera">{{ rev.authorCarrera }} · UAO</p>
-                      <p class="text-xs text-[#adaaad] mt-0.5">{{ new Date(rev.createdAt).toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric' }) }}</p>
+                    <div class="flex gap-0.5 text-orange-500 flex-shrink-0">
+                      <span v-for="n in 5" :key="n" class="material-symbols-outlined text-sm" :style="{ fontVariationSettings: `'FILL' ${n <= rev.foodScore ? 1 : 0}` }">star</span>
                     </div>
                   </div>
-                  <div class="flex gap-0.5 text-orange-500">
-                    <span v-for="n in 5" :key="n" class="material-symbols-outlined text-sm" :style="{ fontVariationSettings: `'FILL' ${n <= rev.foodScore ? 1 : 0}` }">star</span>
-                  </div>
-                </div>
 
-                <p v-if="rev.comment" class="text-[#3f3f42] font-medium leading-relaxed font-sans">{{ rev.comment }}</p>
+                  <!-- Score chips -->
+                  <div class="flex gap-2 flex-wrap mb-4">
+                    <span class="flex items-center gap-1.5 px-3 py-1 bg-orange-50 border border-orange-100 rounded-full text-xs font-bold text-orange-700">
+                      <span class="material-symbols-outlined text-orange-500" style="font-size:13px;font-variation-settings:'FILL' 1;">restaurant</span>
+                      Comida {{ rev.foodScore }}/5
+                    </span>
+                    <span class="flex items-center gap-1.5 px-3 py-1 bg-blue-50 border border-blue-100 rounded-full text-xs font-bold text-blue-700">
+                      <span class="material-symbols-outlined text-blue-400" style="font-size:13px;font-variation-settings:'FILL' 1;">support_agent</span>
+                      Servicio {{ rev.serviceScore }}/5
+                    </span>
+                    <span class="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 border border-emerald-100 rounded-full text-xs font-bold text-emerald-700">
+                      <span class="material-symbols-outlined text-emerald-500" style="font-size:13px;font-variation-settings:'FILL' 1;">payments</span>
+                      Precio {{ rev.priceScore }}/5
+                    </span>
+                  </div>
+
+                  <p v-if="rev.comment" class="text-[#3f3f42] font-medium leading-relaxed font-sans">{{ rev.comment }}</p>
+                </div>
 
                 <div v-if="rev.imageUrl" class="mt-4">
                   <img
@@ -358,16 +377,17 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
                   />
                 </div>
 
-                <div v-if="rev.managerReply" class="mt-6 relative pl-6">
+                <div v-if="rev.managerReply" class="mt-5 relative pl-5">
                   <div class="absolute left-0 top-0 bottom-0 w-1 bg-orange-500 rounded-full"></div>
-                  <div class="bg-orange-500/5 rounded-2xl p-5 border border-orange-500/10">
-                    <div class="flex items-center gap-2 mb-2">
+                  <div class="bg-orange-500/5 rounded-2xl p-4 border border-orange-500/10">
+                    <div class="flex items-center gap-2 mb-1.5">
                       <span class="material-symbols-outlined text-orange-500 text-sm">reply</span>
                       <span class="text-xs font-bold uppercase tracking-wider text-orange-500 brand">Respuesta Oficial</span>
                     </div>
                     <p class="text-[#3f3f42] text-sm italic leading-relaxed font-sans">"{{ rev.managerReply }}"</p>
                   </div>
                 </div>
+              </div>
               </article>
             </div>
 
