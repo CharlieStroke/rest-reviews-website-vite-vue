@@ -302,7 +302,7 @@ const formatTime = (iso: string) => {
       <!-- API Request Logs (1/3) -->
       <section class="lg:col-span-1">
         <div class="flex items-center justify-between mb-6">
-          <h2 class="text-2xl font-bold tracking-tight text-white brand">Logs de API</h2>
+          <h2 class="text-2xl font-bold tracking-tight text-white brand">Logs de la API</h2>
           <div class="flex items-center gap-2">
             <span class="flex items-center gap-1 text-emerald-400 text-xs font-bold uppercase tracking-widest bg-emerald-400/10 px-2 py-1 rounded-full border border-emerald-400/20">
               <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>

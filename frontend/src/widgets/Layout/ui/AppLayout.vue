@@ -88,7 +88,7 @@ const isActive = (path: string) => route.path === path || route.path.startsWith(
             class="transition-colors border-b-2 pb-1 text-lg font-semibold"
             :class="isActive('/admin') ? 'text-orange-500 font-bold border-orange-500' : 'text-[#adaaad] hover:text-white border-transparent'"
           >
-            Panel Admin
+            Panel de Administrador
           </router-link>
           <router-link
             v-if="authStore.user?.role === 'manager'"

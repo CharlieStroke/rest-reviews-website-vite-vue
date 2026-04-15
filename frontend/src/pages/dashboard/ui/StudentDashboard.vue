@@ -3,10 +3,11 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/entities/user/model/authStore';
 import { ReviewService } from '@/entities/review/api/ReviewService';
+import Icon from '@/shared/ui/Icon.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
-const firstName = computed(() => authStore.user?.name?.split(' ')[0] || 'León');
+const firstName = computed(() => authStore.user?.name?.split(' ')[0] || 'Estudiante');
 
 const FALLBACK_IMAGES = [
   'https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
@@ -59,30 +60,24 @@ const navigateToEstablishment = (slug: string) => {
   <div class="w-full">
     <!-- Welcome Banner -->
     <section class="relative w-full h-[520px] md:h-[600px] flex items-center overflow-hidden mb-12">
-        <!-- Creamy Background Layer -->
         <div class="absolute inset-0 bg-[#f1ebd6]"></div>
-
-        <!-- Atmospheric Imagery — más ancha, menos degradado -->
         <div class="absolute right-0 top-0 w-3/5 h-full">
             <div class="relative w-full h-full">
                 <img class="w-full h-full object-cover" src="/assets/images/ANAHUAC-1-1160x700.jpg" alt="Campus Anáhuac Oaxaca"/>
                 <div class="absolute inset-0 bg-gradient-to-r from-[#f1ebd6] via-[#FAF9F6]/30 to-transparent"></div>
             </div>
         </div>
-
         <div class="relative z-10 px-10 md:px-20 max-w-3xl">
             <h1 class="text-5xl md:text-7xl font-extrabold text-[#0e0e10] tracking-tighter leading-tight mb-4 brand">
-                Hola, {{ firstName }}.<br/>
-                <span class="text-orange-500">¿Dónde comeremos hoy?</span>
+                Bienvenido, {{ firstName }}.<br/>
+                <span class="text-orange-500">¿Tienes hambre?</span>
             </h1>
             <p class="text-[#525155] text-lg font-medium max-w-md mb-8">
-                Explora las mejores experiencias culinarias dentro de tu campus. Calidad, sabor y comunidad en un solo lugar.
+                Explora las mejores los establecimientos de comida dentro de tu universidad y calificalos.
             </p>
             <RouterLink
                 to="/establishments"
-                class="inline-flex items-center gap-3 bg-orange-500 hover:bg-orange-400 text-white font-black text-xl px-10 py-5 rounded-2xl shadow-xl hover:shadow-orange-500/40 hover:-translate-y-1 transition-all duration-200 active:scale-95"
-            >
-                <span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">star</span>
+                class="inline-flex items-center gap-3 bg-orange-500 hover:bg-orange-400 text-white font-black text-xl px-10 py-5 rounded-2xl shadow-xl hover:shadow-orange-500/40 hover:-translate-y-1 transition-all duration-200 active:scale-95">
                 Evaluar ahora
             </RouterLink>
         </div>
@@ -92,12 +87,12 @@ const navigateToEstablishment = (slug: string) => {
     <section class="px-8 md:px-12 pb-24 w-full">
         <div class="flex justify-between items-end mb-10 border-b border-[#48474a]/15 pb-4">
             <div>
-                <h2 class="text-3xl font-bold tracking-tight text-white mb-2 brand">Gastronomía del Campus</h2>
-                <p class="text-[#adaaad]">Establecimientos mejor calificados para nuestros Leones.</p>
+                <h2 class="text-3xl font-bold tracking-tight text-white mb-2 brand">Establecimientos</h2>
+                <p class="text-[#adaaad]">Establecimientos de la universidad Anáhuac Oaxaca</p>
             </div>
             <div class="flex space-x-2">
                 <button aria-label="Filtros" class="p-2 w-10 h-10 rounded-full border border-[#48474a]/40 hover:bg-surface-variant transition-colors flex items-center justify-center text-[#adaaad] hover:text-white">
-                    <span class="material-symbols-outlined" aria-hidden="true">tune</span>
+                    <Icon name="tune" />
                 </button>
             </div>
         </div>
@@ -136,7 +131,8 @@ const navigateToEstablishment = (slug: string) => {
                         <h3 class="text-2xl font-bold text-[#0e0e10] mb-1 brand">{{ est.name }}</h3>
                         <p class="text-[#525155] text-sm line-clamp-2 h-10">{{ est.description }}</p>
                         <div class="mt-4 flex items-center text-[#3f3f42] text-xs font-semibold">
-                            <span class="material-symbols-outlined text-sm mr-1">location_on</span> {{ est.location }}
+                            <Icon name="location_on" :size="16" class="mr-1" />
+                            {{ est.location }}
                         </div>
                     </div>
                 </div>

@@ -1,5 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import UserAvatar from './UserAvatar.vue';
+import StarRating from './StarRating.vue';
+import Icon from './Icon.vue';
+import Badge from './Badge.vue';
 
 export interface ReviewCardData {
   id: string;
@@ -38,14 +42,6 @@ const emit = defineEmits<{
   (e: 'image-click', reviewId: string): void;
 }>();
 
-const initials = computed(() => {
-  const name = props.showEstablishment
-    ? props.review.establishmentName
-    : props.review.author;
-  if (!name) return '?';
-  return name.split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase();
-});
-
 const displayName = computed(() => {
   if (props.showEstablishment) return props.review.establishmentName || 'Establecimiento';
   return props.review.author || 'Estudiante';
@@ -63,19 +59,19 @@ const avgScore = computed(() =>
   ((props.review.foodScore + props.review.serviceScore + props.review.priceScore) / 3).toFixed(1)
 );
 
+const sentimentVariant = computed((): 'success' | 'danger' | 'neutral' => {
+  const s = props.review.sentiment;
+  if (s === 'positive') return 'success';
+  if (s === 'negative') return 'danger';
+  return 'neutral';
+});
+
 const sentimentLabel = computed(() => {
   const s = props.review.sentiment;
   if (s === 'positive') return 'Positiva';
   if (s === 'negative') return 'Negativa';
   if (s === 'neutral') return 'Neutral';
   return null;
-});
-
-const sentimentClasses = computed(() => {
-  const s = props.review.sentiment;
-  if (s === 'positive') return 'rc-sentiment--positive';
-  if (s === 'negative') return 'rc-sentiment--negative';
-  return 'rc-sentiment--neutral';
 });
 
 const handleImageClick = () => {
@@ -102,14 +98,7 @@ const handleImageClick = () => {
             <slot name="header-actions" />
             <div class="rc__avg-badge">
               <span class="rc__avg-number">{{ avgScore }}</span>
-              <div class="rc__stars">
-                <span
-                  v-for="n in 5"
-                  :key="n"
-                  class="material-symbols-outlined rc__star"
-                  :style="{ fontVariationSettings: `'FILL' ${n <= review.foodScore ? 1 : 0}` }"
-                >star</span>
-              </div>
+              <StarRating :value="review.foodScore" :size="14" />
             </div>
           </div>
         </div>
@@ -118,7 +107,11 @@ const handleImageClick = () => {
       <!-- Header: Author mode (avatar + name) -->
       <div v-else class="rc__header">
         <div class="rc__author">
-          <div class="rc__avatar">{{ initials }}</div>
+          <UserAvatar
+            :name="displayName"
+            size="md"
+            shape="circle"
+          />
           <div>
             <h4 class="rc__name brand">{{ displayName }}</h4>
             <p v-if="showAuthor && review.authorCarrera" class="rc__carrera">
@@ -132,14 +125,7 @@ const handleImageClick = () => {
           <slot name="header-actions" />
           <div class="rc__avg-badge">
             <span class="rc__avg-number">{{ avgScore }}</span>
-            <div class="rc__stars">
-              <span
-                v-for="n in 5"
-                :key="n"
-                class="material-symbols-outlined rc__star"
-                :style="{ fontVariationSettings: `'FILL' ${n <= review.foodScore ? 1 : 0}` }"
-              >star</span>
-            </div>
+            <StarRating :value="review.foodScore" :size="14" />
           </div>
         </div>
       </div>
@@ -147,17 +133,17 @@ const handleImageClick = () => {
       <!-- Score chips -->
       <div class="rc__scores">
         <div class="rc__chip rc__chip--food">
-          <span class="material-symbols-outlined rc__chip-icon" style="font-variation-settings:'FILL' 1;">restaurant</span>
+          <Icon name="restaurant" :filled="true" class="rc__chip-icon" />
           <span class="rc__chip-label">Comida</span>
           <span class="rc__chip-value">{{ review.foodScore }}/5</span>
         </div>
         <div class="rc__chip rc__chip--service">
-          <span class="material-symbols-outlined rc__chip-icon" style="font-variation-settings:'FILL' 1;">support_agent</span>
+          <Icon name="support_agent" :filled="true" class="rc__chip-icon" />
           <span class="rc__chip-label">Servicio</span>
           <span class="rc__chip-value">{{ review.serviceScore }}/5</span>
         </div>
         <div class="rc__chip rc__chip--price">
-          <span class="material-symbols-outlined rc__chip-icon" style="font-variation-settings:'FILL' 1;">payments</span>
+          <Icon name="payments" :filled="true" class="rc__chip-icon" />
           <span class="rc__chip-label">Precio</span>
           <span class="rc__chip-value">{{ review.priceScore }}/5</span>
         </div>
@@ -165,10 +151,9 @@ const handleImageClick = () => {
 
       <!-- Sentiment badge -->
       <div v-if="showSentiment && sentimentLabel" class="rc__sentiment-row">
-        <span class="rc__sentiment" :class="sentimentClasses">
-          <span class="material-symbols-outlined" style="font-size:13px;">psychology</span>
+        <Badge :variant="sentimentVariant" icon="psychology">
           {{ sentimentLabel }}
-        </span>
+        </Badge>
       </div>
 
       <!-- Title -->
@@ -201,7 +186,7 @@ const handleImageClick = () => {
         <div class="rc__reply-bar"></div>
         <div class="rc__reply-content">
           <div class="rc__reply-head">
-            <span class="material-symbols-outlined rc__reply-icon">reply</span>
+            <Icon name="reply" :size="14" class="rc__reply-icon" />
             <span class="rc__reply-label brand">Respuesta Oficial</span>
             <slot name="reply-badge" />
           </div>
@@ -217,7 +202,6 @@ const handleImageClick = () => {
    ReviewCard — Dark premium design
    ═══════════════════════════════════════════════════════════════════════════════ */
 
-/* ─── Shell ────────────────────────────────────────────────────────────────── */
 .rc {
   background: linear-gradient(145deg, #282829 0%, #282829 100%);
   border-radius: 1.5rem;
@@ -236,7 +220,6 @@ const handleImageClick = () => {
     inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
-/* ─── Accent ───────────────────────────────────────────────────────────────── */
 .rc__accent {
   height: 3px;
   background: linear-gradient(90deg, #f97316, #f59e0b, #f97316);
@@ -249,15 +232,9 @@ const handleImageClick = () => {
   50% { background-position: 100% 50%; }
 }
 
-/* ─── Body ─────────────────────────────────────────────────────────────────── */
-.rc__body {
-  padding: 1.5rem;
-}
+.rc__body { padding: 1.5rem; }
 
-/* ─── Header: Establishment mode ───────────────────────────────────────────── */
-.rc__header-est {
-  margin-bottom: 1.25rem;
-}
+.rc__header-est { margin-bottom: 1.25rem; }
 
 .rc__est-top {
   display: flex;
@@ -266,9 +243,7 @@ const handleImageClick = () => {
   gap: 1rem;
 }
 
-.rc__est-info {
-  min-width: 0;
-}
+.rc__est-info { min-width: 0; }
 
 .rc__est-name {
   font-weight: 900;
@@ -278,7 +253,6 @@ const handleImageClick = () => {
   letter-spacing: -0.02em;
 }
 
-/* ─── Header: Author mode ──────────────────────────────────────────────────── */
 .rc__header {
   display: flex;
   justify-content: space-between;
@@ -292,21 +266,6 @@ const handleImageClick = () => {
   align-items: center;
   gap: 0.75rem;
   min-width: 0;
-}
-
-.rc__avatar {
-  width: 2.75rem;
-  height: 2.75rem;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #f97316, #ea580c);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 0.85rem;
-  flex-shrink: 0;
-  box-shadow: 0 4px 14px rgba(249, 115, 22, 0.35);
 }
 
 .rc__name {
@@ -330,7 +289,6 @@ const handleImageClick = () => {
   letter-spacing: 0.02em;
 }
 
-/* ─── Rating Group ─────────────────────────────────────────────────────────── */
 .rc__rating-group {
   display: flex;
   align-items: center;
@@ -353,17 +311,6 @@ const handleImageClick = () => {
   font-family: 'Manrope', sans-serif;
 }
 
-.rc__stars {
-  display: flex;
-  gap: 1px;
-}
-
-.rc__star {
-  font-size: 14px;
-  color: #f97316;
-}
-
-/* ─── Score Chips ──────────────────────────────────────────────────────────── */
 .rc__scores {
   display: flex;
   gap: 0.625rem;
@@ -383,11 +330,9 @@ const handleImageClick = () => {
   transition: background 0.2s, transform 0.2s;
 }
 
-.rc__chip:hover {
-  transform: translateY(-1px);
-}
+.rc__chip:hover { transform: translateY(-1px); }
 
-.rc__chip-icon { font-size: 18px; }
+.rc__chip-icon { font-size: 18px !important; }
 
 .rc__chip-label {
   font-size: 0.8rem;
@@ -421,41 +366,8 @@ const handleImageClick = () => {
 }
 .rc__chip--price .rc__chip-icon { color: #34d399; }
 
-/* ─── Sentiment ────────────────────────────────────────────────────────────── */
-.rc__sentiment-row {
-  margin-bottom: 0.75rem;
-}
+.rc__sentiment-row { margin-bottom: 0.75rem; }
 
-.rc__sentiment {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  padding: 0.25rem 0.625rem;
-  border-radius: 9999px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  border: 1px solid;
-}
-
-.rc-sentiment--positive {
-  color: #34d399;
-  background: rgba(52, 211, 153, 0.1);
-  border-color: rgba(52, 211, 153, 0.2);
-}
-
-.rc-sentiment--negative {
-  color: #f87171;
-  background: rgba(248, 113, 113, 0.1);
-  border-color: rgba(248, 113, 113, 0.2);
-}
-
-.rc-sentiment--neutral {
-  color: rgba(255, 255, 255, 0.4);
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.1);
-}
-
-/* ─── Title ────────────────────────────────────────────────────────────────── */
 .rc__title {
   font-weight: 700;
   color: #faf9f6;
@@ -464,7 +376,6 @@ const handleImageClick = () => {
   font-family: 'Manrope', sans-serif;
 }
 
-/* ─── Comment ──────────────────────────────────────────────────────────────── */
 .rc__comment {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.06);
@@ -479,7 +390,6 @@ const handleImageClick = () => {
   line-height: 1.75;
 }
 
-/* ─── Image ────────────────────────────────────────────────────────────────── */
 .rc__image-wrap {
   margin-bottom: 1rem;
   border-radius: 1rem;
@@ -500,7 +410,6 @@ const handleImageClick = () => {
   transform: scale(1.02);
 }
 
-/* ─── Manager Reply ────────────────────────────────────────────────────────── */
 .rc__reply {
   position: relative;
   padding-left: 1.25rem;
@@ -531,10 +440,7 @@ const handleImageClick = () => {
   margin-bottom: 0.5rem;
 }
 
-.rc__reply-icon {
-  font-size: 14px;
-  color: #f97316;
-}
+.rc__reply-icon { color: #f97316; }
 
 .rc__reply-label {
   font-size: 0.62rem;
@@ -551,7 +457,6 @@ const handleImageClick = () => {
   line-height: 1.65;
 }
 
-/* ─── Responsive ───────────────────────────────────────────────────────────── */
 @media (max-width: 640px) {
   .rc__header, .rc__est-top { flex-direction: column; gap: 0.75rem; }
   .rc__rating-group { justify-content: space-between; width: 100%; }

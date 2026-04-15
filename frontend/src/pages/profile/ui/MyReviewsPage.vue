@@ -3,6 +3,10 @@ import { ref, computed, onMounted } from 'vue';
 import { ReviewService } from '@/entities/review/api/ReviewService';
 import ReviewCard from '@/shared/ui/ReviewCard.vue';
 import EditReviewForm from '@/features/review/ui/EditReviewForm.vue';
+import EmptyState from '@/shared/ui/EmptyState.vue';
+import IconButton from '@/shared/ui/IconButton.vue';
+import Spinner from '@/shared/ui/Spinner.vue';
+import Pagination from '@/widgets/pagination/ui/Pagination.vue';
 import { useMyReviews } from '@/features/review/model/useMyReviews';
 import { extractErrorMessage } from '@/shared/lib/extractError';
 import type { MyReview } from '@/entities/review/model/types';
@@ -53,8 +57,6 @@ onMounted(async () => {
     loading.value = false;
   }
 });
-
-
 </script>
 
 <template>
@@ -70,7 +72,6 @@ onMounted(async () => {
         to="/establishments"
         class="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-400 text-white font-black text-base px-7 py-4 rounded-2xl shadow-lg hover:shadow-orange-500/30 hover:-translate-y-0.5 transition-all duration-200 active:scale-95 whitespace-nowrap"
       >
-        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
         Evaluar ahora
       </RouterLink>
     </div>
@@ -84,16 +85,21 @@ onMounted(async () => {
     <div v-else-if="error" class="text-center text-red-400 py-12">{{ error }}</div>
 
     <!-- Empty -->
-    <div v-else-if="reviews.length === 0" class="rounded-3xl p-14 text-center border border-white/10 bg-white/3">
-      <span class="material-symbols-outlined text-5xl text-white/20 mb-4 block">rate_review</span>
-      <p class="text-white/50 font-medium mb-6">Aún no has escrito ninguna reseña.</p>
-      <RouterLink
-        to="/establishments"
-        class="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-400 text-white font-black text-base px-8 py-4 rounded-2xl shadow-lg hover:shadow-orange-500/30 transition-all"
+    <div v-else-if="reviews.length === 0" class="rounded-3xl border border-white/10 bg-white/3">
+      <EmptyState
+        icon="rate_review"
+        title="Aún no has escrito ninguna reseña."
+        theme="light"
       >
-        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
-        Evaluar ahora
-      </RouterLink>
+        <template #actions>
+          <RouterLink
+            to="/establishments"
+            class="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-400 text-white font-black text-base px-8 py-4 rounded-2xl shadow-lg hover:shadow-orange-500/30 transition-all"
+          >
+            Evaluar ahora
+          </RouterLink>
+        </template>
+      </EmptyState>
     </div>
 
     <div v-else>
@@ -110,21 +116,22 @@ onMounted(async () => {
           <template #header-actions>
             <template v-if="editingId !== rev.id">
               <div class="flex items-center gap-2">
-                <button
-                  @click="editingId = rev.id"
-                  class="w-9 h-9 rounded-xl bg-white/5 hover:bg-orange-500/20 border border-white/10 hover:border-orange-500/30 text-white/50 hover:text-orange-400 flex items-center justify-center transition-colors"
+                <IconButton
+                  icon="edit"
+                  shape="square"
+                  variant="ghost"
                   title="Editar reseña"
-                >
-                  <span class="material-symbols-outlined text-base">edit</span>
-                </button>
-                <button
-                  v-if="confirmDeleteId !== rev.id"
-                  @click="confirmDeleteId = rev.id"
-                  class="w-9 h-9 rounded-xl bg-white/5 hover:bg-red-500/20 border border-white/10 hover:border-red-500/30 text-white/50 hover:text-red-400 flex items-center justify-center transition-colors"
-                  title="Eliminar reseña"
-                >
-                  <span class="material-symbols-outlined text-base">delete</span>
-                </button>
+                  @click="editingId = rev.id"
+                />
+                <template v-if="confirmDeleteId !== rev.id">
+                  <IconButton
+                    icon="delete"
+                    shape="square"
+                    variant="danger"
+                    title="Eliminar reseña"
+                    @click="confirmDeleteId = rev.id"
+                  />
+                </template>
                 <div v-else class="flex items-center gap-2">
                   <span class="text-xs text-white/50">¿Eliminar?</span>
                   <button
@@ -132,7 +139,7 @@ onMounted(async () => {
                     :disabled="deletingId === rev.id"
                     class="px-3 py-1.5 text-xs font-bold rounded-lg bg-red-500 hover:bg-red-400 text-white transition-colors disabled:opacity-50 flex items-center gap-1"
                   >
-                    <span v-if="deletingId === rev.id" class="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    <Spinner v-if="deletingId === rev.id" size="xs" />
                     {{ deletingId === rev.id ? '…' : 'Sí' }}
                   </button>
                   <button @click="confirmDeleteId = null" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white/10 hover:bg-white/20 text-white/60 transition-colors">
@@ -161,24 +168,15 @@ onMounted(async () => {
         </ReviewCard>
       </div>
 
-      <!-- Pagination -->
-      <div v-if="totalPages > 1" class="flex items-center justify-center gap-3 mt-8">
-        <button
-          @click="currentPage--"
-          :disabled="currentPage === 1"
-          class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white disabled:opacity-30 hover:bg-white/10 transition-colors flex items-center justify-center"
-        >
-          <span class="material-symbols-outlined text-lg">chevron_left</span>
-        </button>
-        <span class="text-white/60 text-sm font-medium">{{ currentPage }} / {{ totalPages }}</span>
-        <button
-          @click="currentPage++"
-          :disabled="currentPage === totalPages"
-          class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white disabled:opacity-30 hover:bg-white/10 transition-colors flex items-center justify-center"
-        >
-          <span class="material-symbols-outlined text-lg">chevron_right</span>
-        </button>
-      </div>
+      <Pagination
+        v-if="totalPages > 1"
+        :current-page="currentPage"
+        :total-pages="totalPages"
+        variant="simple"
+        theme="dark"
+        class="mt-8"
+        @update:current-page="currentPage = $event"
+      />
     </div>
   </div>
 </template>

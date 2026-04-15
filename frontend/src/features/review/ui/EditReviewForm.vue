@@ -2,6 +2,11 @@
 import { ref } from 'vue';
 import { ReviewService } from '@/entities/review/api/ReviewService';
 import { extractErrorMessage } from '@/shared/lib/extractError';
+import BaseButton from '@/shared/ui/BaseButton.vue';
+import TextInput from '@/shared/ui/TextInput.vue';
+import TextArea from '@/shared/ui/TextArea.vue';
+import FormField from '@/shared/ui/FormField.vue';
+import FormError from '@/shared/ui/FormError.vue';
 import type { ReviewCardData } from '@/shared/ui/ReviewCard.vue';
 
 const props = defineProps<{
@@ -43,7 +48,7 @@ const saveEdit = async () => {
       title: editForm.value.title || undefined,
       comment: editForm.value.comment || undefined,
     });
-    
+
     emit('success', {
       foodScore: editForm.value.foodScore,
       serviceScore: editForm.value.serviceScore,
@@ -75,41 +80,47 @@ const saveEdit = async () => {
         </div>
       </div>
     </div>
-    
-    <!-- Title -->
-    <div>
-      <label class="text-[10px] uppercase text-white/50 font-semibold tracking-wider block mb-1">Título</label>
-      <input
+
+    <FormField label="Título" theme="dark">
+      <TextInput
         v-model="editForm.title"
-        type="text"
-        maxlength="100"
         placeholder="Título de tu reseña"
-        class="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:border-orange-500/50 focus:outline-none focus:ring-2 focus:ring-orange-500/20 transition-all"
+        :maxlength="100"
+        theme="dark"
       />
-    </div>
-    
-    <!-- Comment -->
-    <div>
-      <label class="text-[10px] uppercase text-white/50 font-semibold tracking-wider block mb-1">Comentario</label>
-      <textarea
+    </FormField>
+
+    <FormField label="Comentario" theme="dark">
+      <TextArea
         v-model="editForm.comment"
-        rows="3"
-        maxlength="500"
         placeholder="Cuéntanos más detalles…"
-        class="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:border-orange-500/50 focus:outline-none focus:ring-2 focus:ring-orange-500/20 transition-all resize-none"
-      ></textarea>
-    </div>
-    
-    <p v-if="editError" class="text-red-400 text-xs font-bold">{{ editError }}</p>
-    
+        :rows="3"
+        :maxlength="500"
+        theme="dark"
+      />
+    </FormField>
+
+    <FormError :message="editError" theme="dark" />
+
     <div class="flex gap-3 justify-end mt-2">
-      <button @click="emit('cancel')" :disabled="editSaving" class="px-5 py-2 text-sm font-semibold rounded-xl text-white/50 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-40">
+      <BaseButton
+        variant="ghost"
+        theme="dark"
+        shape="rounded"
+        :disabled="editSaving"
+        @click="emit('cancel')"
+      >
         Cancelar
-      </button>
-      <button @click="saveEdit" :disabled="editSaving" class="px-6 py-2 text-sm font-bold rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white shadow-lg focus:scale-95 transition-all disabled:opacity-50 flex items-center gap-2 border border-orange-400/20">
-        <span v-if="editSaving" class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-        {{ editSaving ? 'Guardando…' : 'Guardar' }}
-      </button>
+      </BaseButton>
+      <BaseButton
+        variant="primary"
+        shape="rounded"
+        :loading="editSaving"
+        loading-text="Guardando…"
+        @click="saveEdit"
+      >
+        Guardar
+      </BaseButton>
     </div>
   </div>
 </template>
