@@ -4,6 +4,7 @@ import { ReviewService } from '@/entities/review/api/ReviewService';
 import type { Establishment } from '@/entities/review/model/types';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/entities/user/model/authStore';
+import Icon from '@/shared/ui/Icon.vue';
 
 const establishments = ref<Establishment[]>([]);
 const loading = ref(true);
@@ -49,7 +50,7 @@ const goToDetails = (slug: string) => {
       <h1 class="text-3xl md:text-4xl font-black tracking-tight text-white brand mb-2">
         Establecimientos
       </h1>
-      <p class="text-[#adaaad] text-sm">Los 4 espacios gastronómicos del campus Anáhuac Oaxaca.</p>
+      <p class="text-[#adaaad] text-sm">de la Universidad Anáhuac Oaxaca.</p>
     </div>
 
     <!-- Skeleton -->
@@ -64,7 +65,7 @@ const goToDetails = (slug: string) => {
     <!-- Error -->
     <div v-else-if="errorMsg" class="flex flex-col items-center py-16 text-center">
       <div class="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mb-4">
-        <span class="material-symbols-outlined text-red-400">error</span>
+        <Icon name="error" class="text-red-400" />
       </div>
       <p class="text-[#adaaad] mb-4 text-sm">{{ errorMsg }}</p>
       <button
@@ -91,7 +92,7 @@ const goToDetails = (slug: string) => {
             <h2 class="text-xl font-bold text-white brand leading-tight">{{ est.name }}</h2>
           </div>
           <div class="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center flex-shrink-0">
-            <span class="material-symbols-outlined text-orange-400 text-lg">storefront</span>
+            <Icon name="storefront" class="text-orange-400" :size="20" />
           </div>
         </div>
 

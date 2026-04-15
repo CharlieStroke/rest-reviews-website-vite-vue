@@ -23,7 +23,7 @@ const error = ref<string | null>(null);
 type TabKey = 'feed' | 'menu' | 'gallery' | 'reviews';
 const activeTab = ref<TabKey>('feed');
 const tabs: ReadonlyArray<{ key: TabKey; label: string }> = [
-  { key: 'feed',    label: 'Feed' },
+  { key: 'feed',    label: 'Publicaciones' },
   { key: 'menu',    label: 'Menú' },
   { key: 'gallery', label: 'Galería' },
   { key: 'reviews', label: 'Reseñas' },
@@ -212,7 +212,7 @@ onMounted(async () => {
         <!-- LEFT — About (siempre visible) -->
         <div class="lg:col-span-4 space-y-10">
           <section class="bg-surface-container-low p-8 rounded-3xl">
-            <h3 class="text-xs uppercase tracking-[0.2em] font-black text-primary mb-4 font-headline">About the Kitchen</h3>
+            <h3 class="text-xs uppercase tracking-[0.2em] font-black text-primary mb-4 font-headline">Descripción</h3>
             <p class="text-on-surface-variant leading-relaxed mb-6 font-body">
               {{ est.description || 'Sin descripción disponible.' }}
             </p>
@@ -350,8 +350,7 @@ onMounted(async () => {
                 <button
                   :disabled="currentPage === totalPages || reviewsLoading"
                   @click="loadReviews(currentPage + 1)"
-                  class="flex items-center gap-1 px-5 py-2.5 rounded-xl bg-surface-container border border-outline-variant/20 text-sm font-bold text-on-surface disabled:opacity-40 hover:bg-surface-container-high transition-colors font-headline"
-                >
+                  class="flex items-center gap-1 px-5 py-2.5 rounded-xl bg-surface-container border border-outline-variant/20 text-sm font-bold text-on-surface disabled:opacity-40 hover:bg-surface-container-high transition-colors font-headline">
                   Siguiente
                   <span class="material-symbols-outlined" style="font-size:16px;">arrow_forward_ios</span>
                 </button>
