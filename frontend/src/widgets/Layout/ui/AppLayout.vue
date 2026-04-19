@@ -171,6 +171,7 @@ const isActive = (path: string) => route.path === path || route.path.startsWith(
 
         <!-- Mobile: User initials + Hamburger -->
         <div class="flex md:hidden items-center gap-3">
+          <NotificationBell v-if="authStore.user?.role === 'student'" />
           <div class="w-9 h-9 rounded-full bg-orange-500/20 border border-orange-500/40 flex items-center justify-center text-orange-400 font-bold text-sm">
             {{ userInitials }}
           </div>
