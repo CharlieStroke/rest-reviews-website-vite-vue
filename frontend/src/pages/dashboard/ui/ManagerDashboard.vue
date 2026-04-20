@@ -18,6 +18,13 @@ interface ScoreBins { food: number[]; service: number[]; price: number[] }
 
 interface NegativeTerm { term: string; mentions: number }
 
+interface CriticalReview {
+  id: string;
+  comment: string;
+  createdAt: string;
+  authorName?: string;
+}
+
 interface EstablishmentMetrics {
   id: string;
   name: string;
@@ -33,12 +40,14 @@ interface EstablishmentMetrics {
   criticalMentionsCount: number;
   scoreDistribution: ScoreBins;
   negativeTerms: NegativeTerm[];
+  criticalReviews: CriticalReview[];
 }
 
 // ── State ──────────────────────────────────────────────────────────────────────
 const establishment = ref<EstablishmentMetrics | null>(null);
 const metricsLoading = ref(true);
 const metricsError = ref<string | null>(null);
+const showCriticalModal = ref(false);
 
 // ── KPI 1 — CSAT (Sentiment Index) ────────────────────────────────────────────
 const csat = computed(() => establishment.value?.sentimentScore ?? 0);
@@ -91,6 +100,11 @@ const npsColor = computed(() => {
 
 // ── KPI 4 — Menciones Críticas ────────────────────────────────────────────────
 const criticalCount = computed(() => establishment.value?.criticalMentionsCount ?? 0);
+const criticalReviews = computed(() => establishment.value?.criticalReviews ?? []);
+
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' });
+}
 
 const criticalLabel = computed(() => {
   const v = criticalCount.value;
@@ -359,7 +373,11 @@ onMounted(() => loadMetrics());
           </div>
 
           <!-- KPI 4: Menciones Críticas -->
-          <div class="bg-white/5 backdrop-blur border border-white/10 rounded-[1.5rem] p-6 flex flex-col gap-4">
+          <div
+            class="bg-white/5 backdrop-blur border border-white/10 rounded-[1.5rem] p-6 flex flex-col gap-4 cursor-pointer transition-colors"
+            :class="{ 'hover:border-red-500/30': criticalCount > 0 }"
+            @click="showCriticalModal = true"
+          >
             <div class="flex items-center justify-between">
               <div class="w-11 h-11 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center">
                 <span class="material-symbols-outlined text-xl" :class="criticalColor.icon" style="font-variation-settings: 'FILL' 1;">warning</span>
@@ -370,6 +388,10 @@ onMounted(() => loadMetrics());
               <h3 class="text-[#adaaad] text-xs font-bold mb-1 uppercase tracking-widest">Menciones Críticas</h3>
               <span class="text-3xl font-black text-white brand">{{ criticalCount }}</span>
               <p class="text-xs text-[#adaaad] mt-0.5">Alertas de calidad e higiene</p>
+              <p v-if="criticalCount > 0" class="text-xs text-orange-400 mt-2 flex items-center gap-1">
+                <span class="material-symbols-outlined text-xs" style="font-size:13px;">touch_app</span>
+                Ver reseñas
+              </p>
             </div>
           </div>
 
@@ -539,6 +561,53 @@ onMounted(() => loadMetrics());
           <span class="material-symbols-outlined text-[#adaaad] text-2xl flex-shrink-0">arrow_forward_ios</span>
         </div>
       </section>
+
+      <!-- Critical Reviews Modal -->
+      <Transition name="fade-scale">
+        <div
+          v-if="showCriticalModal"
+          class="fixed inset-0 z-50 flex items-center justify-center p-4"
+          @click.self="showCriticalModal = false"
+        >
+          <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+          <div class="relative w-full max-w-2xl max-h-[80vh] flex flex-col bg-[#1a1a1d] border border-white/10 rounded-3xl shadow-2xl overflow-hidden">
+            <!-- Modal header -->
+            <div class="flex items-center justify-between px-6 py-5 border-b border-white/5 flex-shrink-0">
+              <div class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-red-400" style="font-variation-settings: 'FILL' 1;">warning</span>
+                <div>
+                  <h3 class="font-bold text-white brand">Menciones Críticas</h3>
+                  <p class="text-xs text-[#adaaad]">{{ criticalCount }} alerta{{ criticalCount !== 1 ? 's' : '' }} detectada{{ criticalCount !== 1 ? 's' : '' }} por IA</p>
+                </div>
+              </div>
+              <button
+                @click="showCriticalModal = false"
+                class="w-9 h-9 rounded-xl flex items-center justify-center text-[#adaaad] hover:text-white hover:bg-white/5 transition-colors"
+              >
+                <span class="material-symbols-outlined text-xl">close</span>
+              </button>
+            </div>
+            <!-- Modal body -->
+            <div class="overflow-y-auto flex-1 px-6 py-4 space-y-3">
+              <div v-if="criticalReviews.length === 0" class="py-8 text-center text-[#adaaad] text-sm">
+                No hay textos de reseñas disponibles.
+              </div>
+              <div
+                v-for="review in criticalReviews"
+                :key="review.id"
+                class="bg-white/5 border border-red-500/20 rounded-2xl p-4"
+              >
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="material-symbols-outlined text-red-400 text-sm" style="font-variation-settings: 'FILL' 1; font-size: 16px;">person</span>
+                  <span class="text-sm font-semibold text-white">{{ review.authorName || 'Estudiante' }}</span>
+                  <span class="text-xs text-[#adaaad] ml-auto">{{ formatDate(review.createdAt) }}</span>
+                </div>
+                <p class="text-sm text-[#c9c7cc] leading-relaxed">{{ review.comment }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
 
     </template>
   </div>
