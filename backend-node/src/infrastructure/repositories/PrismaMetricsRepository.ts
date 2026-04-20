@@ -1,5 +1,5 @@
 import prisma from '../database/prisma.service';
-import { IMetricsRepository, GlobalMetrics, EstablishmentMetricSummary, NegativeTerm, ScoreBins } from '../../domain/repositories/IMetricsRepository';
+import { IMetricsRepository, GlobalMetrics, EstablishmentMetricSummary, NegativeTerm, ScoreBins, CriticalReview } from '../../domain/repositories/IMetricsRepository';
 import { injectable } from 'tsyringe';
 
 @injectable()
@@ -79,10 +79,13 @@ export class PrismaMetricsRepository implements IMetricsRepository {
                     _count: { select: { reviews: true } },
                     reviews: {
                         select: {
+                            id: true,
                             foodScore: true,
                             serviceScore: true,
                             priceScore: true,
                             comment: true,
+                            createdAt: true,
+                            authorName: true,
                             sentimentResults: {
                                 orderBy: { createdAt: 'desc' },
                                 take: 1,
@@ -155,6 +158,18 @@ export class PrismaMetricsRepository implements IMetricsRepository {
             r.comment && CRITICAL_WORDS.some((w: string) => (r.comment as string).toLowerCase().includes(w))
         ).length;
 
+        const criticalReviews: CriticalReview[] = e.reviews
+            .filter((r: any) =>
+                r.comment && CRITICAL_WORDS.some((w: string) => (r.comment as string).toLowerCase().includes(w))
+            )
+            .slice(0, 10)
+            .map((r: any) => ({
+                id: r.id,
+                comment: r.comment as string,
+                createdAt: r.createdAt,
+                authorName: r.authorName as string | undefined,
+            }));
+
         const negativeTerms: NegativeTerm[] =
             Array.isArray(latestSnapshot?.negativeTerms)
                 ? (latestSnapshot.negativeTerms as unknown as NegativeTerm[])
@@ -173,6 +188,7 @@ export class PrismaMetricsRepository implements IMetricsRepository {
             reviewsLastMonth,
             nps,
             criticalMentionsCount,
+            criticalReviews,
             scoreDistribution: { food: foodBins, service: serviceBins, price: priceBins },
             negativeTerms,
         };
