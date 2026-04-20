@@ -36,6 +36,13 @@ export interface GlobalMetrics {
     totalUsers: number;
 }
 
+export interface CriticalReview {
+    id: string;
+    comment: string;
+    createdAt: Date;
+    authorName: string | undefined;
+}
+
 export interface EstablishmentMetricSummary extends EstablishmentMetric {
     sentimentDistribution: SentimentSummary;
     reviewsThisMonth: number;
@@ -44,6 +51,7 @@ export interface EstablishmentMetricSummary extends EstablishmentMetric {
     criticalMentionsCount: number;
     scoreDistribution: ScoreDistribution;
     negativeTerms: NegativeTerm[];
+    criticalReviews: CriticalReview[];
 }
 
 export interface IMetricsRepository {
