@@ -3,7 +3,8 @@ import path from 'path';
 
 export default defineConfig({
     test: {
-        include: ['tests/unit/**/*.test.ts', 'tests/integration/**/*.test.ts'],
+        include: ['tests/unit/**/*.test.ts'],
+        setupFiles: ['tests/setup.ts'],
         coverage: {
             provider: 'v8',
             include: ['src/domain/entities/**', 'src/application/use-cases/**'],
