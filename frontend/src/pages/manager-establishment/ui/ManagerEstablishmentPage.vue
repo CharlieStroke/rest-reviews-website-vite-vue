@@ -98,7 +98,9 @@ const fetchAll = async () => {
       const idx = reviews.value.findIndex(r => r.id === highlightId);
       if (idx > 0) {
         const [highlighted] = reviews.value.splice(idx, 1);
-        reviews.value.unshift(highlighted);
+        if (highlighted) {
+          reviews.value.unshift(highlighted);
+        }
       }
     }
   } catch {

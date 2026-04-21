@@ -21,6 +21,31 @@ Tres servicios independientes:
 - **Estructura del Frontend:** Feature-Sliced Design (FSD) para modularizar por entidades, features y páginas, evitando el código espagueti.
 - **Backend Node:** Clean Architecture.
 - **Backend DI:** Uso de `tsyringe` (`@injectable`, `@inject`) con tokens en `container.ts`.
+- **Backend Analytics:** Clean Architecture (3 capas) mantenida deliberadamente — escalable para agregar nuevos modelos ML (food trend, etc.). Modelo actual: `pysentimiento/robertuito-sentiment-analysis` (solo inferencia, sin reentrenamiento).
+
+---
+
+## Docker
+
+```bash
+# Levantar todos los servicios
+docker-compose up --build
+
+# Solo analytics
+docker-compose up backend-analytics
+
+# Solo node
+docker-compose up backend-node
+```
+
+Cada servicio requiere su `.env` correspondiente (`backend-node/.env`, `backend-analytics/.env`).
+La DB es Supabase — no hay contenedor de postgres local.
+
+## CI/CD
+
+GitHub Actions en `.github/workflows/ci.yml`. Se dispara en cada push/PR a `master`.
+Jobs: `test-analytics` (pytest + ruff) → `test-node` (vitest + eslint) → `docker-build`.
+El job de docker usa cache GHA por scope para builds rápidos en reruns.
 
 ---
 
