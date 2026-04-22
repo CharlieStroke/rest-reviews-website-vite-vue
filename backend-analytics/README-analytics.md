@@ -1,106 +1,125 @@
-# Analytics Service — Python NLP Intelligence
+# Anáhuac Eats — Backend Analytics
 
-FastAPI service dedicated to **Spanish sentiment analysis** and gastronomic metric calculation for the campus restaurant review platform.
+Servicio de análisis de sentimiento en español y cálculo de métricas gastronómicas. Expuesto como API HTTP con **FastAPI** y modelo transformer **RoBERTa**.
 
 ---
 
-## Architecture
+## Stack
 
-Clean Architecture with three layers:
+| Tecnología | Uso |
+|---|---|
+| Python 3.10+ | Runtime |
+| FastAPI + Uvicorn | Framework HTTP async |
+| PyTorch + Transformers | Inferencia del modelo NLP |
+| SQLAlchemy 2.0 | Acceso a base de datos |
+| Pydantic | Validación de esquemas |
+| pytest + pytest-cov | Tests y cobertura |
+| ruff | Linter |
+
+---
+
+## Arquitectura — Clean Architecture
 
 ```
 backend-analytics/
-├── domain/              # Entities, interfaces, value objects, IGECalculator, SentimentReconciler
-├── application/         # Use cases (predict, train/evaluate, snapshots, pipeline)
+├── domain/
+│   ├── entities/            # Review, MetricsSnapshot, ModelVersion
+│   ├── repositories/        # Interfaces (IReviewRepository, etc.)
+│   └── services/            # IGECalculator, SentimentReconciler, IGEWeights
+├── application/
+│   └── use_cases/           # PredictSingleReview, EvaluateModel, TrainModel,
+│                            # GenerateSnapshots, RunPipeline
 ├── infrastructure/
-│   ├── database/        # SQLAlchemy repositories (reviews, model, metrics)
-│   └── ml/              # TransformerSentimentPipeline, evaluation dataset
-├── server.py            # FastAPI entry point
-└── config.py            # Environment config (DATABASE_URL, API key, model name)
+│   ├── database/            # SQLAlchemy repositories
+│   └── ml/                  # TransformerSentimentPipeline, training_data.py
+├── server.py                # FastAPI entry point
+└── config.py                # Variables de entorno
 ```
 
 ---
 
-## Sentiment Model
+## Modelo de sentimiento
 
-**Model:** `pysentimiento/robertuito-sentiment-analysis`
-- RoBERTa fine-tuned on ~60M Spanish tweets
-- Handles slang, colloquial Spanish, negations, emojis
-- Inference only — weights are frozen, no retraining
+**Modelo:** `pysentimiento/robertuito-sentiment-analysis`
+
+- RoBERTa fine-tuned en ~60M tweets en español
+- Maneja slang, español coloquial, negaciones, emojis
+- Solo inferencia — pesos congelados, sin reentrenamiento
 - Labels: `POS → positive`, `NEG → negative`, `NEU → neutral`
-- Input truncated to 512 tokens
-- Downloaded from HuggingFace Hub on first startup and cached locally
-
-**Configured via:**
-```env
-TRANSFORMER_MODEL_NAME=pysentimiento/robertuito-sentiment-analysis  # default
-```
+- Entrada truncada a 512 tokens
+- Descargado de HuggingFace Hub en el primer inicio y cacheado localmente
 
 ---
 
 ## SentimentReconciler
 
-Combines transformer confidence with explicit star-rating signals to correct low-confidence predictions.
+Combina la confianza del transformer con las calificaciones de estrellas para corregir predicciones de baja confianza.
 
-**Two-layer override strategy:**
+**Estrategia de override:**
 
-1. **High confidence (≥ 0.72)** → trust the model unconditionally, return as-is.
-2. **Low confidence** → derive label from IGE-weighted scores, then apply food-quality veto rules:
-   - `food ≤ 2` + model says `positive` → override to `negative` or `neutral`
-   - `food ≤ 2` + model says `neutral` → override to `negative`
+1. **Alta confianza (≥ 0.72)** → confía en el modelo incondicionalmente.
+2. **Baja confianza** → deriva la etiqueta desde el IGE ponderado, luego aplica veto de calidad de comida:
+   - `food ≤ 2` + modelo dice `positive` → override a `negative` o `neutral`
+   - `food ≤ 2` + modelo dice `neutral` → override a `negative`
 
-| Weighted score threshold | Derived label |
-|--------------------------|---------------|
-| `weighted < 2.5`         | `negative`    |
-| `2.5 ≤ weighted < 3.7`  | `neutral`     |
-| `weighted ≥ 3.7`         | `positive`    |
+| Score ponderado | Etiqueta derivada |
+|---|---|
+| `< 2.5` | `negative` |
+| `2.5 – 3.7` | `neutral` |
+| `≥ 3.7` | `positive` |
 
 `weighted = food×0.5 + service×0.3 + price×0.2`
 
-The reconciler only activates when all three scores are provided. If any score is absent, the raw transformer output is returned unchanged.
+Solo activa cuando los tres scores están presentes. Si falta alguno, retorna el output crudo del transformer.
 
 ---
 
-## IGE Metric
+## IGE — Índice de Experiencia Gastronómica
 
-Index of Gastronomic Experience — weighted score in the 0–100 range:
+Puntuación ponderada en rango 0–100:
 
-| Dimension   | Weight | Description                              |
-|-------------|--------|------------------------------------------|
-| **Food**    | 50%    | Taste, temperature, presentation         |
-| **Service** | 30%    | Wait time, staff kindness, attention     |
-| **Price**   | 20%    | Value for money perception               |
+| Dimensión | Peso | Descripción |
+|---|---|---|
+| Comida | 50% | Sabor, temperatura, presentación |
+| Servicio | 30% | Tiempo de espera, atención del personal |
+| Precio | 20% | Percepción de valor por dinero |
 
-Formula: `IGE = (food×0.5 + service×0.3 + price×0.2) × 20`
+`IGE = (food×0.5 + service×0.3 + price×0.2) × 20`
 
 ---
 
-## Setup
+## Variables de entorno
 
-### Prerequisites
-- Python 3.8+
-- Virtual environment
+Crea `backend-analytics/.env` desde `backend-analytics/.env.example`:
 
-### Installation
+| Variable | Descripción |
+|---|---|
+| `DATABASE_URL` | Conexión Supabase (pooler en producción) |
+| `ANALYTICS_API_KEY` | Clave que protege `/predict` y `/train` |
+| `TRANSFORMER_MODEL_NAME` | Nombre del modelo HuggingFace (opcional) |
+| `MODEL_VERSION` | Versión del modelo (opcional) |
+| `LOG_LEVEL` | Nivel de logging: `INFO`, `DEBUG` (opcional) |
+
+**Nunca commitees `.env`.**
+
+---
+
+## Instalación
+
 ```bash
 python -m venv venv
-venv\Scripts\activate        # Windows
 source venv/bin/activate     # Linux/Mac
+.\venv\Scripts\activate      # Windows
+
 pip install -r requirements.txt
 ```
 
-### Environment (`.env`)
-```env
-DATABASE_URL=postgresql://...
-ANALYTICS_API_KEY=<secret>                                           # required — protects /predict and /train
-TRANSFORMER_MODEL_NAME=pysentimiento/robertuito-sentiment-analysis  # optional
-MODEL_VERSION=v1.1.0                                                 # optional
-LOG_LEVEL=INFO                                                       # optional
-```
+---
 
-### Start the server
+## Desarrollo local
+
 ```bash
-uvicorn server:app --host 0.0.0.0 --port 8001
+uvicorn server:app --host 0.0.0.0 --port 8001 --reload
 ```
 
 ---
@@ -108,7 +127,7 @@ uvicorn server:app --host 0.0.0.0 --port 8001
 ## API Endpoints
 
 ### `POST /predict`
-Protected by `X-API-Key` header. Called automatically by the Node backend on every new review submission.
+Protegido por `X-API-Key`. Llamado automáticamente por el backend Node en cada nueva reseña.
 
 ```json
 // Request
@@ -124,10 +143,8 @@ Protected by `X-API-Key` header. Called automatically by the Node backend on eve
 { "review_id": "uuid", "label": "positive", "probability": 0.9732, "model_ready": true }
 ```
 
-`food_score`, `service_score`, and `price_score` are optional. When provided they feed the `SentimentReconciler` to correct low-confidence predictions.
-
 ### `POST /train`
-Protected by `X-API-Key` header. Full pipeline: evaluates model against training data, classifies all reviews, generates IGE snapshots per establishment. Called by admin via `POST /api/metrics/run` on the Node backend.
+Protegido por `X-API-Key`. Pipeline completo: evalúa el modelo, clasifica todas las reseñas y genera snapshots IGE por establecimiento. Llamado por admin vía `POST /api/metrics/run` en el backend Node, y también automáticamente cada noche a las 2:00 AM.
 
 ```json
 // Response
@@ -139,42 +156,39 @@ Protected by `X-API-Key` header. Full pipeline: evaluates model against training
 { "status": "ok", "model_loaded": true }
 ```
 
-> **Contract:** Changing the `/train` response shape requires coordination with `backend-node/src/infrastructure/services/AnalyticsService.ts`.
-
----
-
-## Security
-
-`/predict` and `/train` require the `X-API-Key` header matching `ANALYTICS_API_KEY` from the environment. Requests without a valid key receive `403 Forbidden`. `/health` is public.
+> **Contrato:** cambiar la forma del response de `/train` requiere actualizar `backend-node/src/infrastructure/services/AnalyticsService.ts`.
 
 ---
 
 ## Tests
 
 ```bash
-# Activate venv first
-venv\Scripts\python -m pytest tests/unit/ -v     # Windows
-python -m pytest tests/unit/ -v                  # Linux/Mac
+# Linux/Mac
+python -m pytest tests/unit/ -v --cov
+
+# Windows
+venv\Scripts\python -m pytest tests/unit/ -v --cov
 ```
 
-118 unit tests, zero external dependencies (all DB and HuggingFace calls are mocked).
+**118 tests unitarios**, sin dependencias externas (DB y HuggingFace mockeados).
 
-| Test file | What it covers |
+| Archivo | Qué cubre |
 |---|---|
 | `test_transformer_pipeline.py` | `is_loaded`, `load_or_train`, `predict`, `evaluate` |
-| `test_predict_single_review.py` | `PredictSingleReviewUseCase` — model ready and not ready paths |
-| `test_sentiment_reconciler.py` | `SentimentReconciler` — all override rules and edge cases |
+| `test_predict_single_review.py` | `PredictSingleReviewUseCase` — modelo listo y no listo |
+| `test_sentiment_reconciler.py` | `SentimentReconciler` — todas las reglas y edge cases |
 | `test_use_cases.py` | `EvaluateModel`, `TrainModel`, `GenerateSnapshots`, `RunPipeline` |
 | `test_domain_services.py` | `IGECalculator` |
-| `test_entities.py` | Domain entities |
+| `test_entities.py` | Entidades de dominio |
 | `test_value_objects.py` | `IGEWeights`, `SentimentLabel` |
-| `test_training_data.py` | Dataset integrity |
+| `test_training_data.py` | Integridad del dataset de evaluación |
 
-**Patching note:** HuggingFace `transformers` uses a lazy-loader (`_LazyModule`). Always patch at the import site, not at the source package:
+**Nota de patching:** HuggingFace `transformers` usa un lazy-loader (`_LazyModule`). Siempre parchear en el sitio de importación, no en el paquete fuente:
+
 ```python
-# Correct
+# Correcto
 @patch("infrastructure.ml.transformer_pipeline.hf_pipeline")
 
-# Wrong — does not intercept the lazy module
+# Incorrecto — no intercepta el lazy module
 @patch("transformers.pipeline")
 ```
