@@ -1,109 +1,164 @@
-# Restaurant Analytics & Sentiment Platform
+# Anáhuac Eats
 
-[![Stack](https://img.shields.io/badge/Architecture-Clean_Architecture-blue)](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
-[![Backend](https://img.shields.io/badge/Backend-Node.js_TypeScript-green)](/backend-node)
-[![Analytics](https://img.shields.io/badge/Analytics-Python_ML-yellow)](/backend-analytics)
-[![Frontend](https://img.shields.io/badge/Frontend-Vue_3_Vite-42b883)](/frontend)
+Plataforma de reseñas de restaurantes universitarios para el campus Anáhuac Oaxaca. Ecosistema cerrado exclusivo para la comunidad universitaria — sin indexación pública.
 
-A state-of-the-art full-stack platform designed to analyze restaurant performance through customer reviews. The system leverages **Clean Architecture**, **Machine Learning**, and **Feature-Sliced Design** to deliver deep insights into gastronomic experiences.
+[![CI](https://github.com/CharlieMorales13/rest-reviews-website-vite-vue/actions/workflows/ci.yml/badge.svg)](https://github.com/CharlieMorales13/rest-reviews-website-vite-vue/actions/workflows/ci.yml)
+[![Frontend](https://img.shields.io/badge/Frontend-Vercel-black)](https://anahuac-eats.com)
+[![Architecture](https://img.shields.io/badge/Architecture-Clean_Architecture-blue)](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
 
 ---
 
-## 🏗️ System Architecture
+## Arquitectura
 
-The platform follows a distributed architecture with specialized services:
-
-```mermaid
-graph TD
-    A[Frontend - Vue 3] -->|API Requests| B[Backend Node.js]
-    B -->|Persist/Query| C[(Supabase DB)]
-    B -->|Spawn Process| D[Backend Analytics - Python]
-    D -->|ETL / ML Prediction| C
-    D -->|Return Metrics| B
+```
+┌─────────────────────────────────────────────┐
+│              anahuac-eats.com               │
+│           Frontend SPA (Vercel CDN)         │
+└─────────────────────┬───────────────────────┘
+                      │ HTTPS
+          ┌───────────▼───────────┐
+          │   api.anahuac-eats.com │
+          │  nginx + Let's Encrypt │
+          └───────────┬───────────┘
+                      │ HTTP (interna)
+          ┌───────────▼───────────┐     ┌──────────────────────┐
+          │   Backend Node        │────▶│  Backend Analytics   │
+          │  Express + TypeScript │ HTTP│  FastAPI + Python    │
+          │   Clean Architecture  │     │  RoBERTa transformer │
+          └───────────┬───────────┘     └──────────────────────┘
+                      │
+          ┌───────────▼───────────┐
+          │    Supabase Cloud      │
+          │  PostgreSQL + Storage  │
+          └───────────────────────┘
 ```
 
-### Key Modules
-1.  **[frontend](/frontend)**: User interface built with Vue 3 and Feature-Sliced Design (FSD).
-2.  **[backend-node](/backend-node)**: Main API handling business logic, authentication (RBAC), and storage.
-3.  **[backend-analytics](/backend-analytics)**: Data science engine for Sentiment Analysis and IGE (Index of Gastronomic Experience) calculations.
+| Servicio | Tecnología | Docs |
+|---|---|---|
+| Frontend | Vue 3 + Vite + TypeScript + Pinia | [README-frontend.md](frontend/README-frontend.md) |
+| Backend Node | Express + TypeScript + Prisma + tsyringe | [README-node.md](backend-node/README-node.md) |
+| Backend Analytics | FastAPI + Python + PyTorch + RoBERTa | [README-analytics.md](backend-analytics/README-analytics.md) |
+| Base de datos | Supabase (PostgreSQL + Storage + Realtime) | — |
 
 ---
 
-## 🚀 Technology Stack
+## Roles y permisos (RBAC)
 
-### Core
-- **Database**: Supabase (PostgreSQL)
-- **Design Pattern**: Domain-Driven Design (DDD) & Clean Architecture
-
-### Backend (Node)
-- **Runtime**: Node.js v20+ with TypeScript
-- **Framework**: Express 5 (Native Async Error Handling)
-- **ORM**: Prisma v7
-- **Security**: JWT + Argon2 Hashing
-
-### Analytics (Python)
-- **Intelligence**: Scikit-Learn (Logistic Regression + TF-IDF)
-- **Processing**: Pandas & Numpy
-- **Persistence**: SQLAlchemy 2.0
-
-### Frontend
-- **Framework**: Vue 3 (Composition API)
-- **Build Tool**: Vite
-- **Architecture**: Feature-Sliced Design (FSD)
+| Rol | Permisos |
+|---|---|
+| `student` | Ver establecimientos, crear/editar/eliminar propias reseñas |
+| `manager` | Dashboard de métricas de su establecimiento, responder reseñas |
+| `admin` | Todo lo anterior + gestión de usuarios, establecimientos y pipeline ML |
 
 ---
 
-## 🛠️ Quick Start
+## Requisitos
 
-### Prerequisites
-- Node.js (v20+)
-- Python (3.12+)
-- A Supabase/PostgreSQL instance
+- Node.js 20+
+- Python 3.10+
+- Docker + Docker Compose v2
+- Cuenta Supabase
 
-### 1. Database Setup
-Ensure your PostgreSQL instance is running. Execute the schema found in `backend-node/database/sql/schema.sql` if manual initialization is needed.
+---
 
-### 2. Backend Node Setup
+## Variables de entorno
+
+Cada servicio requiere su propio `.env`. Copia los ejemplos y completa los valores:
+
 ```bash
-cd backend-node
-cp .env.example .env  # Update with your DB credentials
-npm install
-npm run prisma:push   # Sync database schema (see note below)
-npm run dev
+cp backend-node/.env.example   backend-node/.env
+cp backend-analytics/.env.example  backend-analytics/.env
+cp frontend/.env.example       frontend/.env
 ```
 
-> **Note:** If `prisma db push` hangs (common with Supabase pooler), run the schema changes directly in Supabase Dashboard → SQL Editor, then run `npx prisma generate` locally.
+**Nunca commitees archivos `.env`.**
 
-### 3. Backend Analytics Setup
+---
+
+## Desarrollo local
+
 ```bash
+# Backend Node
+cd backend-node && npm install && npm run dev
+
+# Backend Analytics
 cd backend-analytics
-cp .env.example .env  # Update with your DB credentials
 python -m venv venv
-# Windows:
-.\venv\Scripts\activate 
-# Linux/Mac:
-source venv/bin/activate
+source venv/bin/activate        # Linux/Mac
+.\venv\Scripts\activate         # Windows
 pip install -r requirements.txt
+uvicorn server:app --host 0.0.0.0 --port 8001 --reload
+
+# Frontend
+cd frontend && npm install && npm run dev
 ```
 
-### 4. Frontend Setup
-This project uses strict monorepo isolation. There are no configuration files or `node_modules` at the root folder. All frontend dependencies and configs (`vite.config.ts`, `tailwind.config.js`) are safely encapsulated inside the `frontend/` directory.
+Con Docker (todos los servicios):
 
 ```bash
-cd frontend
-npm install
-npm run dev
+docker compose up --build
 ```
 
 ---
 
-## 📈 Key Metrics
-The system calculates the **Index of Gastronomic Experience (IGE)** using a weighted formula:
-- **Food Quality**: 50%
-- **Service Quality**: 30%
-- **Pricing Value**: 20%
+## Tests
+
+```bash
+# Backend Node — unitarios (vitest)
+cd backend-node && npm test
+
+# Backend Analytics — unitarios + cobertura (pytest)
+cd backend-analytics
+source venv/bin/activate
+pytest tests/unit/ -v --cov
+```
+
+Cobertura actual: **>89% Node**, **>80% Python** (118 tests).
 
 ---
 
-## 🛡️ License
-This project is for academic and professional demonstration purposes at Anáhauc Oaxaca University.
+## CI/CD
+
+GitHub Actions (`.github/workflows/ci.yml`) en cada push a `master`:
+
+| Job | Qué hace |
+|---|---|
+| `test-analytics` | ruff lint + pytest (en paralelo) |
+| `test-node` | eslint + vitest (en paralelo) |
+| `deploy` | SSH → VM → `git pull` → `docker compose up -d --build` |
+
+El frontend se despliega automáticamente en **Vercel** en cada push a `master`.
+
+---
+
+## Base de datos
+
+Schema en `backend-node/prisma/schema.prisma`.
+
+> **Importante:** `prisma db push` se cuelga con el pooler de Supabase. Aplica cambios DDL directamente en **Supabase Dashboard → SQL Editor**, luego ejecuta `npx prisma generate` localmente.
+
+---
+
+## Seguridad
+
+- JWT con secret obligatorio (sin fallback)
+- Argon2id para hashing de contraseñas
+- Helmet + CORS con orígenes explícitos
+- Rate limiting por IP (auth) y por `userId` (reviews, uploads)
+- Moderación de imágenes NSFW (Sightengine) antes de subir a Storage
+- `X-API-Key` protege los endpoints de analytics
+- Swagger deshabilitado en producción
+
+---
+
+## IGE — Índice de Experiencia Gastronómica
+
+Puntuación ponderada 0–100 calculada por el servicio de analytics:
+
+| Dimensión | Peso |
+|---|---|
+| Calidad de comida | 50% |
+| Calidad de servicio | 30% |
+| Relación precio-valor | 20% |
+
+Pipeline de analytics corre automáticamente cada noche a las 2:00 AM.

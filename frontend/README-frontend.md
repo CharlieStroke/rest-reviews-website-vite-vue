@@ -1,74 +1,113 @@
-# Restaurant Analytics - Frontend UI
+# Anáhuac Eats — Frontend
 
-State-of-the-art dashboard built with **Vue 3**, **Vite**, and based on the **Feature-Sliced Design (FSD)** architectural methodology.
-
----
-
-## 🏗️ Architecture: Feature-Sliced Design (FSD)
-
-FSD is a modern architectural pattern for frontends that ensures scalability and clean dependency management. The project is organized into strictly defined layers:
-
-### Layers Hierarchy
-1.  **App**: Global setup, providers, and global styles.
-2.  **Pages**: Full-screen views composed of widgets and features.
-3.  **Widgets**: Autonomous UI blocks (e.g., Sidebar, Analytics Charts).
-4.  **Features**: User interactions that bring business value (e.g., Filter Establishments).
-5.  **Entities**: Domain models and their specific logic (e.g., Establishment, Review).
-6.  **Shared**: Generic, reusable assets and UI components.
-
-> 🛡️ **Rule of Dependencies**: A layer can only import from lower layers. Imports towards higher layers are strictly forbidden.
+SPA construida con **Vue 3**, **Vite** y arquitectura **Feature-Sliced Design (FSD)**. Desplegada en Vercel con dominio custom y HTTPS.
 
 ---
 
-## 🚀 Technical Stack
+## Stack
 
--   **Framework**: Vue 3 (Composition API)
--   **Build Tool**: Vite (Lightning fast HMR via strict workspace isolation)
--   **Styling**: Tailwind CSS (Fully configured within `/frontend`)
--   **State Management**: Pinia (Reactive Store)
--   **Routing**: Vue Router
--   **Typing**: Strict TypeScript (`noUncheckedSideEffectImports`, `strict: true`)
+| Tecnología | Uso |
+|---|---|
+| Vue 3 (Composition API) | Framework principal |
+| Vite | Build tool + HMR |
+| TypeScript (strict) | Tipado estático |
+| Pinia | State management |
+| Vue Router | Navegación SPA |
+| Tailwind CSS | Estilos utilitarios |
+| Axios | HTTP client |
 
 ---
 
-## 📁 Folder Structure
+## Arquitectura — Feature-Sliced Design
 
-```text
+```
 frontend/src/
-├── app/              # Global initialization (App.vue, router)
-├── pages/            # View components (Home, Dashboard)
-├── widgets/          # Complex, self-contained blocks
-├── features/         # User interaction logic
-├── entities/         # Business data models
-└── shared/           # Base UI, utils, constants
+├── app/          # Inicialización global (App.vue, router, estilos)
+├── pages/        # Vistas completas (una por ruta)
+├── widgets/      # Bloques UI autónomos (Sidebar, Charts)
+├── features/     # Interacciones de usuario con valor de negocio
+├── entities/     # Modelos de dominio + servicios API
+│   ├── review/   # ReviewService, tipos
+│   └── user/     # UserService, tipos
+└── shared/       # UI base reutilizable, composables, utils
+    ├── ui/       # BaseButton, AppToast, Spinner, ImageLightbox...
+    └── lib/      # useToast, useAuth...
 ```
+
+**Regla de dependencias:** cada capa solo puede importar de capas inferiores.
 
 ---
 
-## 🛠️ Development
+## Variables de entorno
 
-### Setup
+Crea `frontend/.env` desde `frontend/.env.example`:
+
+| Variable | Descripción |
+|---|---|
+| `VITE_API_URL` | URL base del backend Node (sin `/`) |
+| `VITE_SUPABASE_URL` | URL del proyecto Supabase |
+| `VITE_SUPABASE_ANON_KEY` | Clave anon pública de Supabase |
+
+**Nunca commitees `.env`.**
+
+---
+
+## Desarrollo local
+
 ```bash
+cd frontend
 npm install
-```
-
-### Environment Variables
-Create a `.env` file from `.env.example`:
--   `VITE_API_URL`: Base URL of the backend API (default: `http://localhost:3000`).
-
-### Run
-```bash
-npm run dev
-```
-
-### Build for Production
-```bash
-npm run build
+npm run dev       # http://localhost:5173
+npm run build     # build de producción
+npm run preview   # preview del build
 ```
 
 ---
 
-## 📊 Visual Features
--   **Interactive Charts**: Visualization of sentiment trends and IGE scores.
--   **Responsive Design**: Optimized for desktops and mobile devices using modern CSS layouts.
--   **Real-time Metrics**: Dynamic data fetching from the Node.js backend.
+## Despliegue (Vercel)
+
+El frontend se despliega automáticamente en cada push a `master` a través de Vercel.
+
+Configuración del proyecto en Vercel:
+
+| Campo | Valor |
+|---|---|
+| Root Directory | `frontend` |
+| Framework | Vite |
+| Build Command | `npm run build` |
+| Output Directory | `dist` |
+
+El archivo `vercel.json` en esta carpeta configura el rewrite necesario para que Vue Router funcione en producción:
+
+```json
+{ "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }] }
+```
+
+---
+
+## Rutas principales
+
+| Ruta | Vista | Acceso |
+|---|---|---|
+| `/` | Home / Login | Público |
+| `/establishments` | Lista de establecimientos | Autenticado |
+| `/establishments/:slug` | Detalle + reseñas | Autenticado |
+| `/create-review/:slug` | Crear reseña | `student` |
+| `/dashboard` | Dashboard según rol | Autenticado |
+| `/manager/mi-establecimiento` | Dashboard gerente | `manager` |
+| `/admin` | Panel administrador | `admin` |
+| `/profile` | Perfil de usuario | Autenticado |
+
+---
+
+## Navegación por slug
+
+Todos los `router.push` a establecimientos usan `est.slug`, no `est.id`. `CreateReviewPage` resuelve el slug al UUID real antes de llamar a `ReviewService.create`.
+
+---
+
+## Seguridad frontend
+
+- JWT almacenado en memoria (no localStorage)
+- Guards de navegación por rol en Vue Router
+- Sin SSR — SPA pura para evitar indexación (ecosistema cerrado universitario)
