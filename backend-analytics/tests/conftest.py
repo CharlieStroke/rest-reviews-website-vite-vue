@@ -3,8 +3,13 @@ Shared pytest fixtures for the backend-analytics test suite.
 """
 import os
 import sys
+import warnings
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+
+# Silence C-extension warnings from SWIG/onnxruntime that we cannot control
+warnings.filterwarnings("ignore", message=".*SwigPyPacked.*", category=DeprecationWarning)
+warnings.filterwarnings("ignore", message=".*SwigPyObject.*", category=DeprecationWarning)
 
 from unittest.mock import MagicMock
 

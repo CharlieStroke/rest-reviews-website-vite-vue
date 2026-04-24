@@ -15,6 +15,7 @@ import asyncio
 import logging
 import os
 import sys
+from contextlib import asynccontextmanager
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -27,19 +28,6 @@ from infrastructure.logging_config import setup_logging
 
 setup_logging(config.LOG_LEVEL)
 logger = logging.getLogger("analytics.server")
-
-app = FastAPI(title="Analytics Sentiment Service")
-
-_api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
-
-
-async def _require_api_key(api_key: str | None = Security(_api_key_header)) -> None:
-    """Reject requests that don't carry the shared API key (when one is configured)."""
-    expected = config.ANALYTICS_API_KEY
-    if not expected:
-        return  # key not configured → open (dev / local)
-    if api_key != expected:
-        raise HTTPException(status_code=401, detail="Invalid or missing API key")
 
 # ── Dependency container — built once at startup ──────────────────────────
 _deps: dict = {}
@@ -63,8 +51,8 @@ def _build_deps() -> dict:
     )
 
 
-@app.on_event("startup")
-async def startup() -> None:
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     global _deps
     logger.info("Starting analytics server — model=%s", config.TRANSFORMER_MODEL_NAME)
     _deps = _build_deps()
@@ -80,6 +68,21 @@ async def startup() -> None:
             logger.warning("Could not pre-load model: %s", e)
 
     asyncio.create_task(_preload())
+    yield
+
+
+app = FastAPI(title="Analytics Sentiment Service", lifespan=lifespan)
+
+_api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+
+
+async def _require_api_key(api_key: str | None = Security(_api_key_header)) -> None:
+    """Reject requests that don't carry the shared API key (when one is configured)."""
+    expected = config.ANALYTICS_API_KEY
+    if not expected:
+        return  # key not configured → open (dev / local)
+    if api_key != expected:
+        raise HTTPException(status_code=401, detail="Invalid or missing API key")
 
 
 # ── Request / Response models ─────────────────────────────────────────────
