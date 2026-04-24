@@ -5,6 +5,9 @@ markers = [
     "unit: fast tests without external dependencies",
 ]
 addopts = "-v --strict-markers"
+filterwarnings = [
+    "ignore:builtin type SwigPy:DeprecationWarning",
+]
 
 [tool.coverage.run]
 source = ["domain", "application", "infrastructure"]
