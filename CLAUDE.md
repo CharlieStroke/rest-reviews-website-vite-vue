@@ -182,11 +182,39 @@ backend-analytics/
 
 ---
 
-## Tests — Backend Analytics
+## Tests
 
-Tests unitarios en `backend-analytics/tests/unit/`.
+### Flujo obligatorio
 
-**Cómo parchear HuggingFace:**
+- **PR normal:** código y tests van en el mismo commit, mismo día.
+- **Bug fix:** primero el test que reproduce el bug (debe fallar), luego el fix.
+- **Refactor:** verificar cobertura existente antes de tocar el código; los tests deben pasar sin modificarlos.
+
+No se entrega lógica de negocio sin sus tests. Excepción: glue code trivial, configuración, componentes UI puramente presentacionales.
+
+### Comandos para correr tests
+
+```bash
+# Backend Node
+cd backend-node && npm test
+
+# Backend Analytics
+cd backend-analytics && pytest tests/ -v
+
+# Frontend
+cd frontend && npm test
+```
+
+### Cobertura actual
+
+| Servicio | Tests | Archivos clave |
+|---|---|---|
+| backend-analytics | ~135 | `tests/unit/` (dominio, use cases, ML pipeline) + `tests/api/` (endpoints FastAPI) |
+| backend-node | ~90 | `tests/unit/domain/`, `tests/unit/use-cases/`, `tests/unit/controllers/`, `tests/unit/middlewares/`, `tests/unit/dtos/`, `tests/integration/` |
+| frontend | ~45 | `src/shared/lib/extractError.test.ts`, `src/entities/user/model/authStore.test.ts` |
+
+### Patrones de mocking — Backend Analytics
+
 ```python
 # CORRECTO — parchear donde se importa, no el paquete original
 @patch("infrastructure.ml.transformer_pipeline.hf_pipeline")
@@ -195,10 +223,19 @@ Tests unitarios en `backend-analytics/tests/unit/`.
 @patch("transformers.pipeline")
 ```
 
-**Simular modelo no cargado:**
 ```python
+# Simular modelo no cargado
 model.is_loaded.return_value = False   # correcto
 # model._pipeline = None              # incorrecto — el use case usa is_loaded()
+```
+
+### Patrones de mocking — Backend Node
+
+```typescript
+// Mockear env.config para evitar process.exit(1) en tests de middleware
+vi.mock('@/infrastructure/config/env.config', () => ({
+  env: { JWT_SECRET: 'test-secret-key-for-unit-tests' }
+}));
 ```
 
 ---
@@ -219,7 +256,12 @@ model.is_loaded.return_value = False   # correcto
 
 - JWT sin fallback secret — usa `env.JWT_SECRET` obligatorio
 - `UpdateProfileSchema` solo permite: name, avatarUrl, bio, universityId
-- Rate limiting por `userId` del JWT: 10 reviews/hora, 20 uploads/hora
+- Rate limiting separado por endpoint:
+  - `POST /auth/login` y `/auth/refresh` → `loginRateLimiter`: 30 req / 15 min por IP
+  - `POST /auth/register` → `registerRateLimiter`: 10 req / hora por IP
+  - Reviews → `reviewRateLimiter`: 10 req / hora por `userId` del JWT
+  - Uploads → `uploadRateLimiter`: 20 req / hora por `userId` del JWT
+  - **Nota:** login usa límite alto (30) porque el campus universitario comparte una sola IP pública entre todos los dispositivos
 - Moderación de imágenes NSFW vía Sightengine antes de subir a Supabase
 - FastAPI protegida con `X-API-Key` en `/predict` y `/train`
 - CORS con orígenes explícitos (`CORS_ORIGINS` en prod)
