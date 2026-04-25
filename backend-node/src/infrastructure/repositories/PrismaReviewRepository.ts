@@ -47,6 +47,7 @@ export class PrismaReviewRepository implements IReviewRepository {
   async findByEstablishmentId(
     establishmentId: string,
     pagination?: { page: number; limit: number },
+    viewerId?: string,
   ): Promise<{ data: Review[]; total: number }> {
     const skip = pagination
       ? (pagination.page - 1) * pagination.limit
@@ -63,6 +64,8 @@ export class PrismaReviewRepository implements IReviewRepository {
             take: 1,
             select: { predictedLabel: true },
           },
+          _count: { select: { likes: true } },
+          ...(viewerId ? { likes: { where: { userId: viewerId }, select: { userId: true } } } : {}),
         },
         orderBy: { createdAt: "desc" },
         skip,
@@ -72,7 +75,12 @@ export class PrismaReviewRepository implements IReviewRepository {
     ]);
 
     return {
-      data: data.map(this.mapToDomain),
+      data: data.map((d) =>
+        this.mapToDomain(d, {
+          likesCount: (d as any)._count?.likes ?? 0,
+          likedByMe: viewerId ? ((d as any).likes?.length ?? 0) > 0 : false,
+        }),
+      ),
       total,
     };
   }
@@ -87,10 +95,11 @@ export class PrismaReviewRepository implements IReviewRepository {
           take: 1,
           select: { predictedLabel: true },
         },
+        _count: { select: { likes: true } },
       },
       orderBy: { createdAt: "desc" },
     });
-    return data.map(this.mapToDomain);
+    return data.map((d) => this.mapToDomain(d, { likesCount: (d as any)._count?.likes ?? 0 }));
   }
 
   async save(review: Review): Promise<Review> {
@@ -133,7 +142,31 @@ export class PrismaReviewRepository implements IReviewRepository {
     await prisma.review.delete({ where: { id } });
   }
 
-  private mapToDomain(data: any): Review {
+  async addLike(userId: string, reviewId: string): Promise<number> {
+    await prisma.reviewLike.create({ data: { userId, reviewId } });
+    return prisma.reviewLike.count({ where: { reviewId } });
+  }
+
+  async removeLike(userId: string, reviewId: string): Promise<number> {
+    await prisma.reviewLike.delete({ where: { userId_reviewId: { userId, reviewId } } });
+    return prisma.reviewLike.count({ where: { reviewId } });
+  }
+
+  async getLikesCount(reviewId: string): Promise<number> {
+    return prisma.reviewLike.count({ where: { reviewId } });
+  }
+
+  async hasLiked(userId: string, reviewId: string): Promise<boolean> {
+    const like = await prisma.reviewLike.findUnique({ where: { userId_reviewId: { userId, reviewId } } });
+    return like !== null;
+  }
+
+  async getReviewAuthorId(reviewId: string): Promise<string | null> {
+    const review = await prisma.review.findUnique({ where: { id: reviewId }, select: { userId: true } });
+    return review?.userId ?? null;
+  }
+
+  private mapToDomain(data: any, extras?: { likesCount?: number; likedByMe?: boolean }): Review {
     return Review.create({
       id: data.id,
       userId: data.userId,
@@ -152,6 +185,8 @@ export class PrismaReviewRepository implements IReviewRepository {
       managerReplyAt: data.managerReplyAt,
       createdAt: data.createdAt,
       updatedAt: data.updatedAt,
+      likesCount: extras?.likesCount,
+      likedByMe: extras?.likedByMe,
     });
   }
 }
