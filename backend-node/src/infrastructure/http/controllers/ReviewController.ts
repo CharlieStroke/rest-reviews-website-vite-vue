@@ -358,7 +358,7 @@ export class ReviewController {
     }
     const result = await this.likeReviewUseCase.execute({
       userId,
-      reviewId: req.params.id,
+      reviewId: req.params.id as string,
     });
     res.status(200).json({ success: true, data: result });
   };
@@ -374,7 +374,7 @@ export class ReviewController {
     }
     const result = await this.unlikeReviewUseCase.execute({
       userId,
-      reviewId: req.params.id,
+      reviewId: req.params.id as string,
     });
     res.status(200).json({ success: true, data: result });
   };

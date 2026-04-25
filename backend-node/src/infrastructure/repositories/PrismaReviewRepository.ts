@@ -39,7 +39,7 @@ export class PrismaReviewRepository implements IReviewRepository {
     ]);
 
     return {
-      data: data.map(this.mapToDomain),
+      data: data.map((item) => this.mapToDomain(item)),
       total,
     };
   }
