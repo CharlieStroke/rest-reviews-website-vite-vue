@@ -15,11 +15,14 @@ export interface Review {
 
 export interface MyReview extends Review {
   establishmentName: string | null;
+  likesCount: number;
 }
 
 export interface EstablishmentReview extends Review {
   author: string | null;
   authorCarrera?: string | null;
+  likesCount: number;
+  likedByMe: boolean;
 }
 
 export interface UpdateReviewRequest {
