@@ -66,7 +66,7 @@ onMounted(async () => {
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10">
       <div>
         <h2 class="text-3xl font-extrabold text-white">Mis Reseñas</h2>
-        <p class="text-white/50 mt-1">Tus evaluaciones y respuestas de los gerentes.</p>
+        <p class="text-white/50 mt-1">Tus evaluaciones y respuestas.</p>
       </div>
       <RouterLink
         to="/establishments"

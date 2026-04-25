@@ -3,7 +3,6 @@ import { computed } from 'vue';
 import UserAvatar from './UserAvatar.vue';
 import StarRating from './StarRating.vue';
 import Icon from './Icon.vue';
-import Badge from './Badge.vue';
 
 export interface ReviewCardData {
   id: string;
@@ -58,21 +57,6 @@ const formattedDate = computed(() =>
 const avgScore = computed(() =>
   ((props.review.foodScore + props.review.serviceScore + props.review.priceScore) / 3).toFixed(1)
 );
-
-const sentimentVariant = computed((): 'success' | 'danger' | 'neutral' => {
-  const s = props.review.sentiment;
-  if (s === 'positive') return 'success';
-  if (s === 'negative') return 'danger';
-  return 'neutral';
-});
-
-const sentimentLabel = computed(() => {
-  const s = props.review.sentiment;
-  if (s === 'positive') return 'Positiva';
-  if (s === 'negative') return 'Negativa';
-  if (s === 'neutral') return 'Neutral';
-  return null;
-});
 
 const handleImageClick = () => {
   if (props.clickableImage) {
@@ -149,12 +133,6 @@ const handleImageClick = () => {
         </div>
       </div>
 
-      <!-- Sentiment badge -->
-      <div v-if="showSentiment && sentimentLabel" class="rc__sentiment-row">
-        <Badge :variant="sentimentVariant" icon="psychology">
-          {{ sentimentLabel }}
-        </Badge>
-      </div>
 
       <!-- Title -->
       <p v-if="review.title" class="rc__title">{{ review.title }}</p>
