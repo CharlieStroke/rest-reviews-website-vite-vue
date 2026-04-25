@@ -365,6 +365,7 @@ onMounted(async () => {
                     :review="rev"
                     :show-author="true"
                     :clickable-image="true"
+                    :show-like="authStore.userRole === 'student'"
                     @image-click="openLightbox"
                   />
                 </div>
