@@ -15,6 +15,7 @@ export class ListEstablishmentReviewsUseCase {
   async execute(
     slug: string,
     pagination?: { page: number; limit: number },
+    viewerId?: string,
   ): Promise<{ data: Review[]; total: number }> {
     // 1. Resolve slug to establishment
     const establishment = await this.establishmentRepository.findBySlug(slug);
@@ -26,6 +27,7 @@ export class ListEstablishmentReviewsUseCase {
     return await this.reviewRepository.findByEstablishmentId(
       establishment.id!,
       pagination,
+      viewerId,
     );
   }
 }

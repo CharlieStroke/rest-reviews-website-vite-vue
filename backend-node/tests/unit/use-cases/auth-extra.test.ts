@@ -69,6 +69,6 @@ describe('ListEstablishmentReviewsUseCase', () => {
     } as any;
     const result = await new ListEstablishmentReviewsUseCase(reviewRepo, estRepo).execute('delyfull', { page: 1, limit: 10 });
     expect(result.total).toBe(2);
-    expect(reviewRepo.findByEstablishmentId).toHaveBeenCalledWith('est-1', { page: 1, limit: 10 });
+    expect(reviewRepo.findByEstablishmentId).toHaveBeenCalledWith('est-1', { page: 1, limit: 10 }, undefined);
   });
 });

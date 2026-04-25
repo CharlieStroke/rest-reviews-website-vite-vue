@@ -63,5 +63,7 @@ reviewRouter.patch(
   requireRole(["admin", "manager"]),
   reviewController.reply,
 );
+reviewRouter.post("/:id/like", authenticateToken, requireRole(["student"]), reviewController.likeReview);
+reviewRouter.delete("/:id/like", authenticateToken, requireRole(["student"]), reviewController.unlikeReview);
 
 export default reviewRouter;

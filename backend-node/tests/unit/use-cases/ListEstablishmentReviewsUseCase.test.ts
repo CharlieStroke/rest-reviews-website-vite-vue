@@ -26,7 +26,7 @@ describe('ListEstablishmentReviewsUseCase', () => {
         expect(result.data).toHaveLength(2);
         expect(result.total).toBe(2);
         expect(mockEstRepo.findBySlug).toHaveBeenCalledWith('est-1');
-        expect(mockReviewRepo.findByEstablishmentId).toHaveBeenCalledWith('est-1', undefined);
+        expect(mockReviewRepo.findByEstablishmentId).toHaveBeenCalledWith('est-1', undefined, undefined);
     });
 
     it('should throw 404 if establishment does not exist', async () => {
