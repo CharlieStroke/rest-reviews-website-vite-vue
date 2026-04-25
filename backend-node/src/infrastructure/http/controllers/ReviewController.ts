@@ -8,6 +8,8 @@ import { ReplyToReviewUseCase } from "../../../application/use-cases/reviews/Rep
 import { UpdateReviewUseCase } from "../../../application/use-cases/reviews/UpdateReviewUseCase";
 import { DeleteReviewUseCase } from "../../../application/use-cases/reviews/DeleteReviewUseCase";
 import { ClassifyReviewUseCase } from "../../../application/use-cases/reviews/ClassifyReviewUseCase";
+import { LikeReviewUseCase } from "../../../application/use-cases/reviews/LikeReviewUseCase";
+import { UnlikeReviewUseCase } from "../../../application/use-cases/reviews/UnlikeReviewUseCase";
 import {
   CreateReviewSchema,
   ReplyReviewSchema,
@@ -35,6 +37,8 @@ export class ReviewController {
     private deleteReviewUseCase: DeleteReviewUseCase,
     @inject(ClassifyReviewUseCase)
     private classifyReviewUseCase: ClassifyReviewUseCase,
+    @inject(LikeReviewUseCase) private likeReviewUseCase: LikeReviewUseCase,
+    @inject(UnlikeReviewUseCase) private unlikeReviewUseCase: UnlikeReviewUseCase,
   ) {}
 
   /**
@@ -122,10 +126,12 @@ export class ReviewController {
     const { page, limit } = req.query;
     const pageNum = parseInt(page as string) || 1;
     const limitNum = Math.min(parseInt(limit as string) || 10, 100);
+    const viewerId = (req as any).user?.userId as string | undefined;
 
     const { data, total } = await this.listEstablishmentReviewsUseCase.execute(
       slug as string,
       { page: pageNum, limit: limitNum },
+      viewerId,
     );
 
     const formatted = data.map((r) => ({
@@ -142,6 +148,8 @@ export class ReviewController {
       managerReply: r.managerReply ?? null,
       managerReplyAt: r.managerReplyAt ?? null,
       createdAt: r.createdAt,
+      likesCount: r.likesCount,
+      likedByMe: r.likedByMe,
     }));
 
     res
@@ -248,6 +256,7 @@ export class ReviewController {
       managerReply: r.managerReply ?? null,
       managerReplyAt: r.managerReplyAt ?? null,
       createdAt: r.createdAt,
+      likesCount: r.likesCount,
     }));
     res.status(200).json({ success: true, data: formatted });
   };
@@ -335,5 +344,19 @@ export class ReviewController {
     res
       .status(200)
       .json({ success: true, message: "Reseña eliminada correctamente" });
+  };
+
+  public likeReview = async (req: AuthRequest, res: Response): Promise<void> => {
+    const userId = req.user?.userId;
+    if (!userId) { res.status(401).json({ success: false, message: "Unauthorized" }); return; }
+    const result = await this.likeReviewUseCase.execute({ userId, reviewId: req.params.id });
+    res.status(200).json({ success: true, data: result });
+  };
+
+  public unlikeReview = async (req: AuthRequest, res: Response): Promise<void> => {
+    const userId = req.user?.userId;
+    if (!userId) { res.status(401).json({ success: false, message: "Unauthorized" }); return; }
+    const result = await this.unlikeReviewUseCase.execute({ userId, reviewId: req.params.id });
+    res.status(200).json({ success: true, data: result });
   };
 }
