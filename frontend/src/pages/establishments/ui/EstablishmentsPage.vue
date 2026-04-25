@@ -20,12 +20,7 @@ const fetchEstablishments = async () => {
     establishments.value = result;
   } catch {
     errorMsg.value = 'No se pudieron cargar los establecimientos.';
-    establishments.value = [
-      { id: '1', slug: 'delyfull', name: 'DelyFull', category: 'Restaurante' },
-      { id: '2', slug: 'guajaquenito', name: 'Guajaquenito', category: 'Restaurante' },
-      { id: '3', slug: 'cuckoo-coffee-resto', name: 'Cuckoo Coffee & Resto', category: 'Cafetería' },
-      { id: '4', slug: 'cuckoo-box', name: 'Cuckoo Box', category: 'Cafetería' },
-    ];
+    establishments.value = [];
   } finally {
     loading.value = false;
   }
@@ -59,14 +54,13 @@ const goToDetails = (slug: string) => {
     </div>
 
     <!-- Error -->
-    <div v-else-if="errorMsg" class="flex flex-col items-center py-16 text-center animate-appear">
-      <div class="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mb-4">
-        <Icon name="error" class="text-red-400" />
-      </div>
-      <p class="text-[#adaaad] mb-4 text-sm">{{ errorMsg }}</p>
+    <div v-else-if="errorMsg" class="text-center py-16">
+      <span class="material-symbols-outlined text-5xl text-on-surface-variant block mb-4">wifi_off</span>
+      <p class="text-on-surface-variant mb-6">{{ errorMsg }}</p>
       <button
+        data-testid="retry-btn"
         @click="fetchEstablishments"
-        class="px-5 py-2 border border-orange-500/40 text-orange-400 hover:bg-orange-500 hover:text-white rounded-xl text-sm font-semibold transition-all"
+        class="px-6 py-2.5 bg-primary text-on-primary rounded-xl font-semibold hover:bg-primary/90 transition-colors"
       >
         Reintentar
       </button>
