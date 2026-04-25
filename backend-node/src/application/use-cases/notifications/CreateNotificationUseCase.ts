@@ -5,6 +5,7 @@ import { INotificationRepository } from "../../../domain/repositories/INotificat
 interface CreateNotificationDTO {
   userId: string;
   reviewId: string;
+  type?: string;
 }
 
 @injectable()
@@ -18,6 +19,7 @@ export class CreateNotificationUseCase {
     const notification = Notification.create({
       userId: dto.userId,
       reviewId: dto.reviewId,
+      type: dto.type ?? "manager_reply",
     });
     return this.notificationRepository.save(notification);
   }

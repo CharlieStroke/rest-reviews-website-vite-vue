@@ -16,6 +16,8 @@ export interface ReviewProps {
   managerReplyAt?: Date;
   createdAt?: Date;
   updatedAt?: Date;
+  likesCount?: number;
+  likedByMe?: boolean;
 }
 
 export class Review {
@@ -99,6 +101,12 @@ export class Review {
   }
   get updatedAt(): Date | undefined {
     return this.props.updatedAt;
+  }
+  get likesCount(): number {
+    return this.props.likesCount ?? 0;
+  }
+  get likedByMe(): boolean {
+    return this.props.likedByMe ?? false;
   }
 
   public updateContent(data: {
