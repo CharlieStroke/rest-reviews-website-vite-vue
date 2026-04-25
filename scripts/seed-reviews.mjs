@@ -22,7 +22,11 @@ const { PrismaClient } = require(path.join(__dirname, '../backend-node/node_modu
 const argon2 = require(path.join(__dirname, '../backend-node/node_modules/argon2'));
 
 const prisma = new PrismaClient();
-const SEED_PASSWORD = 'REDACTED';
+const SEED_PASSWORD = process.env.SEED_PASSWORD;
+if (!SEED_PASSWORD) {
+  console.error('Error: SEED_PASSWORD env var no definida. Usa: SEED_PASSWORD=xxx node scripts/seed-reviews.mjs');
+  process.exit(1);
+}
 
 // ── Establecimientos ─────────────────────────────────────────────────────────
 const ESTABLISHMENTS = [
