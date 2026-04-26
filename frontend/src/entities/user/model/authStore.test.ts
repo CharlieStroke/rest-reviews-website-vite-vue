@@ -38,6 +38,7 @@ Object.defineProperty(window, 'localStorage', { value: localStorageMock });
 const fakeUser: User = {
   id: 'u1',
   name: 'Carlos',
+  username: 'carlos_gomez',
   email: 'carlos@anahuac.mx',
   role: 'student',
 };
@@ -168,21 +169,21 @@ describe('authStore', () => {
 
     it('calls AuthService.register', async () => {
       const store = useAuthStore();
-      const req = { name: 'Carlos', email: 'carlos@anahuac.mx', password: 'pw', carrera: 'ISC' };
+      const req = { name: 'Carlos', username: 'carlos_gomez', email: 'carlos@anahuac.mx', password: 'pw', carrera: 'ISC' };
       await store.register(req);
       expect(AuthService.register).toHaveBeenCalledWith(req);
     });
 
     it('sets user and token', async () => {
       const store = useAuthStore();
-      await store.register({ name: 'Carlos', email: 'carlos@anahuac.mx', password: 'pw', carrera: 'ISC' });
+      await store.register({ name: 'Carlos', username: 'carlos_gomez', email: 'carlos@anahuac.mx', password: 'pw', carrera: 'ISC' });
       expect(store.user).toEqual(fakeUser);
       expect(store.token).toBe(fakeToken);
     });
 
     it('saves to localStorage', async () => {
       const store = useAuthStore();
-      await store.register({ name: 'Carlos', email: 'carlos@anahuac.mx', password: 'pw', carrera: 'ISC' });
+      await store.register({ name: 'Carlos', username: 'carlos_gomez', email: 'carlos@anahuac.mx', password: 'pw', carrera: 'ISC' });
       expect(localStorageMock.setItem).toHaveBeenCalledWith('token', fakeToken);
       expect(localStorageMock.setItem).toHaveBeenCalledWith('user', JSON.stringify(fakeUser));
     });

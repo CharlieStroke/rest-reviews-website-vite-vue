@@ -116,9 +116,9 @@ describe('LoginUserSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('rejects malformed email', () => {
-    const result = LoginUserSchema.safeParse({ ...validInput, email: 'bad-email' });
-    expect(result.success).toBe(false);
+  it('accepts username (non-email) as identifier', () => {
+    const result = LoginUserSchema.safeParse({ ...validInput, email: 'carlos_gomez' });
+    expect(result.success).toBe(true);
   });
 
   it('rejects empty password', () => {

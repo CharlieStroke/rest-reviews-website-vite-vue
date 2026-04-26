@@ -13,6 +13,7 @@ interface LoginResponse {
     email: string;
     role: string;
     name: string;
+    username: string;
   };
   token: string;
   refreshToken: string;
@@ -25,7 +26,9 @@ export class LoginUserUseCase {
   ) {}
 
   async execute(dto: LoginUserDTO): Promise<LoginResponse> {
-    const user = await this.userRepository.findByEmail(dto.email);
+    const byEmail = await this.userRepository.findByEmail(dto.email);
+    const user =
+      byEmail ?? (await this.userRepository.findByUsername(dto.email));
 
     if (!user || !user.isActive || !user.id) {
       throw new AppError("Invalid credentials or inactive account", 401);
@@ -68,6 +71,7 @@ export class LoginUserUseCase {
         id: user.id,
         email: user.email,
         name: user.name,
+        username: user.username,
         role: user.role,
       },
       token,

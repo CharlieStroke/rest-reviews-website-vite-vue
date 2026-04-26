@@ -64,17 +64,18 @@ const handleLogin = async () => {
         
         <form @submit.prevent="handleLogin" class="space-y-6">
           <div class="space-y-2">
-            <label class="block text-xs font-medium text-white/50 ml-1 uppercase tracking-wider">Email Institucional</label>
+            <label class="block text-xs font-medium text-white/50 ml-1 uppercase tracking-wider">Nombre de usuario</label>
             <div class="relative group">
-              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-lg opacity-40 group-focus-within:opacity-100 transition-opacity">✉️</span>
-              <input 
-                type="email" 
-                v-model="email" 
-                required 
-                placeholder="correo@anahuac.mx" 
-                class="glass-input pl-12" 
+              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold opacity-40 group-focus-within:opacity-100 transition-opacity text-white">@</span>
+              <input
+                type="text"
+                v-model="email"
+                required
+                placeholder="tu_username o correo@anahuac.mx"
+                class="glass-input pl-10"
               />
             </div>
+            <p class="text-xs text-white/35 ml-1">aparecerán tus reviews</p>
           </div>
           
           <div class="space-y-2">
