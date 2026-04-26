@@ -30,7 +30,9 @@ export class RegisterUserUseCase {
       throw new AppError("User with this email already exists", 409);
     }
 
-    const existingUsername = await this.userRepository.findByUsername(dto.username);
+    const existingUsername = await this.userRepository.findByUsername(
+      dto.username,
+    );
     if (existingUsername) {
       throw new AppError("Este username ya está en uso", 409);
     }
