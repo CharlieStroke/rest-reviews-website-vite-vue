@@ -1,6 +1,7 @@
 export interface User {
   id: string;
   name: string;
+  username: string;
   email: string;
   role: 'student' | 'manager' | 'admin';
   avatarUrl?: string | null;
@@ -11,6 +12,7 @@ export interface User {
 
 export interface RegisterRequest {
   name: string;
+  username: string;
   email: string;
   password?: string;
   carrera: string;

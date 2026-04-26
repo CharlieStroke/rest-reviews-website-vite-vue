@@ -16,6 +16,7 @@ const NON_STUDENT_TYPES = [
 
 // ── Form fields ──────────────────────────────────────────────────────────────
 const name         = ref('');
+const username     = ref('');
 const email        = ref('');
 const password     = ref('');
 const loading      = ref(false);
@@ -46,7 +47,7 @@ const resolvedCarrera = computed(() => {
 });
 
 const canSubmit = computed(() => {
-  if (!name.value || !email.value || !password.value) return false;
+  if (!name.value || !username.value || !email.value || !password.value) return false;
   if (isStudent.value) return !!carrera.value;
   if (!nonStudentType.value) return false;
   if (nonStudentType.value === 'Otro') return nonStudentOther.value.trim().length >= 2;
@@ -59,6 +60,7 @@ const handleRegister = async () => {
   try {
     await authStore.register({
       name: name.value,
+      username: username.value,
       email: email.value,
       password: password.value,
       carrera: resolvedCarrera.value,
@@ -111,6 +113,15 @@ const handleRegister = async () => {
             <div class="relative group">
               <span class="absolute left-4 top-1/2 -translate-y-1/2 text-lg opacity-40 group-focus-within:opacity-100 transition-opacity">👤</span>
               <input type="text" v-model="name" required placeholder="Tu nombre completo" class="glass-input pl-12" />
+            </div>
+          </div>
+
+          <!-- Username -->
+          <div class="space-y-2">
+            <label class="block text-xs font-medium text-white/50 ml-1 uppercase tracking-wider">Username</label>
+            <div class="relative group">
+              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold opacity-40 group-focus-within:opacity-100 transition-opacity text-white">@</span>
+              <input type="text" v-model="username" required placeholder="tu_username" minlength="3" maxlength="30" class="glass-input pl-10" />
             </div>
           </div>
 

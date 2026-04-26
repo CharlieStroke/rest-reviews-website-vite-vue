@@ -8,6 +8,7 @@ import { CARRERAS } from '@/shared/lib/constants';
 const props = defineProps<{
   isOpen: boolean;
   initialName?: string;
+  initialUsername?: string;
   initialBio?: string;
   initialCarrera?: string | null;
   initialAvatarUrl?: string | null;
@@ -18,6 +19,7 @@ const emit = defineEmits(['close', 'saved']);
 const authStore = useAuthStore();
 
 const name = ref(props.initialName || '');
+const username = ref(props.initialUsername || '');
 const bio = ref(props.initialBio || '');
 const carrera = ref(props.initialCarrera || '');
 const avatarUrl = ref(props.initialAvatarUrl || '');
@@ -56,6 +58,7 @@ async function onAvatarSelect(e: Event) {
 watch(() => props.isOpen, (open) => {
   if (open) {
     name.value = props.initialName || '';
+    username.value = props.initialUsername || '';
     bio.value = props.initialBio || '';
     carrera.value = props.initialCarrera || '';
     avatarUrl.value = props.initialAvatarUrl || '';
@@ -75,6 +78,7 @@ const handleSave = async () => {
   try {
     await authStore.updateProfile({
       name: name.value.trim(),
+      username: username.value.trim() || undefined,
       bio: bio.value.trim() || null,
       carrera: carrera.value || null,
       avatarUrl: avatarUrl.value || null,
@@ -142,7 +146,7 @@ const handleSave = async () => {
         </div>
 
         <div class="flex flex-col gap-2">
-          <label class="text-xs font-semibold text-on-surface-variant uppercase tracking-widest">Nombre</label>
+          <label class="text-xs font-semibold text-on-surface-variant uppercase tracking-widest">Nombre completo <span class="normal-case text-on-surface-variant/50">(privado)</span></label>
           <input
             v-model="name"
             type="text"
@@ -150,6 +154,21 @@ const handleSave = async () => {
             class="w-full bg-surface-container-lowest border border-outline-variant/15 rounded-xl px-4 py-3.5 text-black font-sans placeholder-on-surface-variant/100 focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all shadow-inner"
             placeholder="Tu nombre completo"
           />
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <label class="text-xs font-semibold text-on-surface-variant uppercase tracking-widest">Username <span class="normal-case text-on-surface-variant/50">(visible para todos)</span></label>
+          <div class="relative">
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-black/40">@</span>
+            <input
+              v-model="username"
+              type="text"
+              minlength="3"
+              maxlength="30"
+              class="w-full bg-surface-container-lowest border border-outline-variant/15 rounded-xl pl-8 pr-4 py-3.5 text-black font-sans placeholder-on-surface-variant/100 focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all shadow-inner"
+              placeholder="tu_username"
+            />
+          </div>
         </div>
 
         <div class="flex flex-col gap-2">

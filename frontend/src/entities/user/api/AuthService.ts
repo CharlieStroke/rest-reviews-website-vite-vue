@@ -3,6 +3,7 @@ import type { User, LoginRequest, RegisterRequest, LoginResponse, RegisterRespon
 
 export interface UpdateProfileRequest {
   name?: string;
+  username?: string;
   bio?: string | null;
   avatarUrl?: string | null;
   universityId?: string | null;

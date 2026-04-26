@@ -62,7 +62,7 @@ onMounted(async () => {
   }
 });
 
-const userName = computed(() => authStore.user?.name || 'Cargando...');
+const userName = computed(() => authStore.user?.username || authStore.user?.name || 'Cargando...');
 const userBio = computed(() => authStore.user?.bio || null);
 const userAvatar = computed(() => authStore.user?.avatarUrl || null);
 const userCarrera = computed(() => authStore.user?.carrera || null);
@@ -228,7 +228,8 @@ const isChangePasswordOpen = ref(false);
 
     <EditProfileModal
       :isOpen="isEditModalOpen"
-      :initialName="userName"
+      :initialName="authStore.user?.name"
+      :initialUsername="authStore.user?.username"
       :initialBio="userBio ?? undefined"
       :initialCarrera="userCarrera"
       :initialAvatarUrl="authStore.user?.avatarUrl"
