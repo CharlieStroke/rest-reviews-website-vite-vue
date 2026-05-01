@@ -168,6 +168,15 @@ const handleImageClick = () => {
         </div>
       </div>
 
+      <!-- Sentiment badge -->
+      <div v-if="showSentiment && review.sentiment" class="rc__sentiment-row">
+        <span class="rc__sentiment-badge" :class="`rc__sentiment-badge--${review.sentiment}`">
+          <span class="material-symbols-outlined rc__sentiment-icon">
+            {{ review.sentiment === 'positive' ? 'sentiment_satisfied' : review.sentiment === 'negative' ? 'sentiment_dissatisfied' : 'sentiment_neutral' }}
+          </span>
+          {{ review.sentiment === 'positive' ? 'Positivo' : review.sentiment === 'negative' ? 'Negativo' : 'Neutral' }}
+        </span>
+      </div>
 
       <!-- Title -->
       <p v-if="review.title" class="rc__title">{{ review.title }}</p>
@@ -397,6 +406,38 @@ const handleImageClick = () => {
 .rc__chip--price .rc__chip-icon { color: #34d399; }
 
 .rc__sentiment-row { margin-bottom: 0.75rem; }
+
+.rc__sentiment-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 99px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  border: 1px solid;
+}
+
+.rc__sentiment-icon { font-size: 15px !important; }
+
+.rc__sentiment-badge--positive {
+  background: rgba(52, 211, 153, 0.1);
+  border-color: rgba(52, 211, 153, 0.25);
+  color: #34d399;
+}
+
+.rc__sentiment-badge--neutral {
+  background: rgba(251, 191, 36, 0.1);
+  border-color: rgba(251, 191, 36, 0.25);
+  color: #fbbf24;
+}
+
+.rc__sentiment-badge--negative {
+  background: rgba(248, 113, 113, 0.1);
+  border-color: rgba(248, 113, 113, 0.25);
+  color: #f87171;
+}
 
 .rc__title {
   font-weight: 700;
