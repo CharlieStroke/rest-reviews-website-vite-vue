@@ -4,6 +4,7 @@ import { AuthService } from '../api/AuthService';
 import type { UpdateProfileRequest } from '../api/AuthService';
 import type { User, LoginRequest, RegisterRequest } from './types';
 import { extractErrorMessage } from '@/shared/lib/extractError';
+import { isTokenExpired } from '@/shared/lib/jwt';
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null);
@@ -75,7 +76,7 @@ export const useAuthStore = defineStore('auth', () => {
       user.value = freshUser;
       localStorage.setItem('user', JSON.stringify(freshUser));
     } catch {
-      // Si falla (token expirado, etc.) no interrumpir la sesión
+      logout();
     }
   };
 
@@ -87,10 +88,14 @@ export const useAuthStore = defineStore('auth', () => {
 
   const initAuth = () => {
     try {
-      const storedUser = localStorage.getItem('user');
       const storedToken = localStorage.getItem('token');
-      
+      const storedUser = localStorage.getItem('user');
+
       if (storedToken && storedToken !== 'undefined' && storedToken !== 'null') {
+        if (isTokenExpired(storedToken)) {
+          logout();
+          return;
+        }
         token.value = storedToken;
       } else {
         token.value = null;
@@ -101,7 +106,7 @@ export const useAuthStore = defineStore('auth', () => {
       } else {
         user.value = null;
       }
-    } catch (err) {
+    } catch {
       logout();
     }
   };

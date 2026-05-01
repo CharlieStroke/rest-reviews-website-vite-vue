@@ -43,7 +43,12 @@ const fakeUser: User = {
   role: 'student',
 };
 
-const fakeToken = 'jwt-token-123';
+function makeFakeToken(expOffsetSeconds = 3600): string {
+  const exp = Math.floor(Date.now() / 1000) + expOffsetSeconds;
+  const payload = btoa(JSON.stringify({ exp, sub: 'u1', role: 'student' }));
+  return `header.${payload}.signature`;
+}
+const fakeToken = makeFakeToken(); // valid for 1 hour
 
 describe('authStore', () => {
   beforeEach(() => {
@@ -285,6 +290,33 @@ describe('authStore', () => {
       expect(store.user).toBeNull();
       expect(store.token).toBeNull();
     });
+
+    it('clears token and user when token is expired', () => {
+      const expiredToken = makeFakeToken(-3600); // expired 1 hour ago
+      localStorageMock.setItem('token', expiredToken);
+      localStorageMock.setItem('user', JSON.stringify(fakeUser));
+
+      const store = useAuthStore();
+      store.initAuth();
+
+      expect(store.token).toBeNull();
+      expect(store.user).toBeNull();
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith('token');
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith('user');
+    });
+
+    it('clears token and user when stored token is malformed', () => {
+      localStorageMock.setItem('token', 'malformed-not-a-jwt');
+      localStorageMock.setItem('user', JSON.stringify(fakeUser));
+
+      const store = useAuthStore();
+      store.initAuth();
+
+      expect(store.token).toBeNull();
+      expect(store.user).toBeNull();
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith('token');
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith('user');
+    });
   });
 
   // ── fetchProfile ────────────────────────────────────
@@ -308,7 +340,7 @@ describe('authStore', () => {
       expect(store.user).toEqual(freshUser);
     });
 
-    it('does not interrupt the session when getMe throws', async () => {
+    it('calls logout when getMe throws', async () => {
       vi.mocked(AuthService.getMe).mockRejectedValue(new Error('expired'));
 
       localStorageMock.setItem('token', fakeToken);
@@ -316,10 +348,12 @@ describe('authStore', () => {
       const store = useAuthStore();
       store.initAuth();
 
-      // Should not throw
       await store.fetchProfile();
-      // Token should still be there (session not interrupted)
-      expect(store.token).toBe(fakeToken);
+
+      expect(store.token).toBeNull();
+      expect(store.user).toBeNull();
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith('token');
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith('user');
     });
   });
 
