@@ -305,13 +305,17 @@ describe('authStore', () => {
       expect(localStorageMock.removeItem).toHaveBeenCalledWith('user');
     });
 
-    it('clears token when stored token is malformed', () => {
+    it('clears token and user when stored token is malformed', () => {
       localStorageMock.setItem('token', 'malformed-not-a-jwt');
+      localStorageMock.setItem('user', JSON.stringify(fakeUser));
 
       const store = useAuthStore();
       store.initAuth();
 
       expect(store.token).toBeNull();
+      expect(store.user).toBeNull();
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith('token');
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith('user');
     });
   });
 
