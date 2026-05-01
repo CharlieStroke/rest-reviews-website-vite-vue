@@ -290,6 +290,29 @@ describe('authStore', () => {
       expect(store.user).toBeNull();
       expect(store.token).toBeNull();
     });
+
+    it('clears token and user when token is expired', () => {
+      const expiredToken = makeFakeToken(-3600); // expired 1 hour ago
+      localStorageMock.setItem('token', expiredToken);
+      localStorageMock.setItem('user', JSON.stringify(fakeUser));
+
+      const store = useAuthStore();
+      store.initAuth();
+
+      expect(store.token).toBeNull();
+      expect(store.user).toBeNull();
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith('token');
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith('user');
+    });
+
+    it('clears token when stored token is malformed', () => {
+      localStorageMock.setItem('token', 'malformed-not-a-jwt');
+
+      const store = useAuthStore();
+      store.initAuth();
+
+      expect(store.token).toBeNull();
+    });
   });
 
   // ── fetchProfile ────────────────────────────────────
